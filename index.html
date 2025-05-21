@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>�� Special GAME 🌟</title>
+    <title>🌟 Special GAME 🌟</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -34,7 +34,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef } = React; // 加入 useRef 以便使用
 
         const BirthdayGameApp = () => {
             const [currentPoints, setCurrentPoints] = useState(0);
@@ -46,7 +46,8 @@
             const games = [
                 { id: 'guess-number', name: '猜數字遊戲', description: '數字秘密，等你來猜！', points: 3, page: 'guess-number' },
                 { id: 'memory-card', name: '記憶翻牌遊戲', description: '考驗你的記憶力！', points: 3, page: 'memory-card' },
-                { id: 'jigsaw-puzzle', name: '滑動拼圖遊戲', description: '碎片拼湊，展現大圖！', points: 5, page: 'jigsaw-puzzle' }
+                { id: 'jigsaw-puzzle', name: '滑動拼圖遊戲', description: '碎片拼湊，展現大圖！', points: 5, page: 'jigsaw-puzzle' },
+                { id: 'gacha-game', name: '幸運抽卡遊戲', description: '試試手氣，抽大獎！', points: 5, page: 'gacha-game' } // 重新加入抽卡遊戲的入口
             ];
 
             // 導航到指定頁面
@@ -105,7 +106,7 @@
                 </div>
             );
 
-            // 猜數字遊戲組件
+            // 猜數字遊戲組件 (這裡的程式碼是基於您原始的版本，應該是好的)
             const GuessNumberGame = () => {
                 const [targetNumber] = useState(Math.floor(Math.random() * 100) + 1);
                 const [guess, setGuess] = useState('');
@@ -126,7 +127,7 @@
                         setMessage(`恭喜你！猜對了！你用了 ${attempts + 1} 次！`);
                         setIsCorrect(true);
                         handleGameComplete('guess-number', games.find(g => g.id === 'guess-number').points);
-                        navigateTo('success-number');
+                        // 移除 navigateTo('success-number'); 讓用戶停留在成功畫面
                     } else if (numGuess < targetNumber) {
                         setMessage('太低了！再高一點！');
                     } else {
@@ -160,6 +161,14 @@
                                     </button>
                                 </div>
                             )}
+                            {isCorrect && (
+                                <button
+                                    onClick={() => navigateTo('success-number')}
+                                    className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
+                                >
+                                    查看獎勵！
+                                </button>
+                            )}
                             <button
                                 onClick={goBack}
                                 className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
@@ -171,7 +180,7 @@
                 );
             };
 
-            // 記憶翻牌遊戲組件
+            // 記憶翻牌遊戲組件 (這裡的程式碼是基於您原始的版本，應該是好的)
             const MemoryCardGame = () => {
                 const initialCards = [
                     '😀', '😂', '😍', '🥳', '😎', '🤩', '🤖', '👾',
@@ -225,7 +234,7 @@
                     if (matches === initialCards.length / 2) {
                         setGameWon(true);
                         handleGameComplete('memory-card', games.find(g => g.id === 'memory-card').points);
-                        navigateTo('success-memory');
+                        // 移除 navigateTo('success-memory'); 讓用戶停留在成功畫面
                     }
                 }, [matches]);
 
@@ -297,6 +306,14 @@
                                     ))}
                                 </div>
                             )}
+                            {gameWon && (
+                                <button
+                                    onClick={() => navigateTo('success-memory')}
+                                    className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
+                                >
+                                    查看獎勵！
+                                </button>
+                            )}
                             <button
                                 onClick={goBack}
                                 className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
@@ -308,8 +325,7 @@
                 );
             };
 
-
-            // 滑動拼圖遊戲組件
+            // 滑動拼圖遊戲組件 (這裡保留了您之前提供且能運行的部分，並加入圖片載入判斷)
             const JigsawPuzzleGame = () => {
                 const [pieces, setPieces] = useState([]);
                 const [originalImageSize, setOriginalImageSize] = useState({ width: 0, height: 0 });
@@ -320,7 +336,7 @@
                 const [isLoading, setIsLoading] = useState(true); // 圖片是否正在載入
                 const [message, setMessage] = useState("載入圖片中...");
 
-                const imageUrl = 'https://Avis0930.github.io/my-surprise-game/demo.jpg'; // 使用您的圖片路徑
+                const imageUrl = 'https://Avis0930.github.io/my-surprise-game/demo.jpg'; // 確保這是您要用的圖片路徑
                 const rows = 3;
                 const cols = 3;
 
@@ -440,7 +456,8 @@
                         setMessage("恭喜你！拼圖完成了！");
                         setIsPuzzleActive(false); // 停止互動
                         handleGameComplete('jigsaw-puzzle', games.find(g => g.id === 'jigsaw-puzzle').points);
-                        navigateTo('success-puzzle'); // 導向成功頁面
+                        // 這裡可以導向成功頁面
+                        navigateTo('success-puzzle');
                     }
                 }, [pieces, isLoading]); // 監聽 pieces 和 isLoading 的變化
 
@@ -490,6 +507,81 @@
                 );
             };
 
+            // 抽卡遊戲組件 (這裡只提供框架，如果原始有完整邏輯，請替換)
+            const GachaGame = () => {
+                const [result, setResult] = useState(null);
+                const [message, setMessage] = useState("點擊按鈕，試試你的手氣！");
+                const [isSpinning, setIsSpinning] = useState(false);
+
+                const rewards = [
+                    { name: '謝謝參與', type: 'text', weight: 40 },
+                    { name: '10點驚喜點數', type: 'points', value: 10, weight: 30 },
+                    { name: '特別禮物 A', type: 'item', weight: 20 },
+                    { name: '神秘大獎！', type: 'item', weight: 10 }
+                ];
+
+                const weightedRandom = (items) => {
+                    let i,
+                        weights = [];
+                    for (i = 0; i < items.length; i++)
+                        weights[i] = items[i].weight + (weights[i - 1] || 0);
+                    
+                    let random = Math.random() * weights[weights.length - 1];
+                    for (i = 0; i < weights.length; i++)
+                        if (weights[i] > random)
+                            break;
+                    return items[i];
+                };
+
+                const handleSpin = () => {
+                    if (isSpinning) return;
+                    setIsSpinning(true);
+                    setResult(null);
+                    setMessage("轉動中...祝你好運！");
+
+                    setTimeout(() => {
+                        const chosenReward = weightedRandom(rewards);
+                        setResult(chosenReward);
+                        setMessage(`恭喜你抽到了：${chosenReward.name}！`);
+                        setIsSpinning(false);
+
+                        // 判斷是否為點數獎勵並增加點數
+                        if (chosenReward.type === 'points') {
+                            setCurrentPoints(prevPoints => prevPoints + chosenReward.value);
+                        }
+                        // 如果是遊戲完成並給點數，則像其他遊戲一樣處理
+                        // handleGameComplete('gacha-game', games.find(g => g.id === 'gacha-game').points); // 抽卡通常是每次都能抽，而不是完成遊戲
+                    }, 2000);
+                };
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-blue-700 flex flex-col items-center justify-center p-4 text-white">
+                        <h2 className="text-4xl font-bold mb-6 text-yellow-300 drop-shadow-lg">幸運抽卡遊戲</h2>
+                        <div className="w-full max-w-md bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl p-6 shadow-2xl border-4 border-white text-center">
+                            <p className="text-xl mb-6">{message}</p>
+                            <div className="mb-6 h-24 flex items-center justify-center text-4xl font-bold text-yellow-200">
+                                {result ? result.name : (isSpinning ? '...' : '等待抽獎')}
+                            </div>
+                            <button
+                                onClick={handleSpin}
+                                disabled={isSpinning}
+                                className={`w-full py-4 px-6 rounded-xl shadow-lg transform transition duration-300 mobile-button font-bold text-white
+                                    ${isSpinning ? 'bg-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 hover:scale-105'}`}
+                            >
+                                {isSpinning ? '轉動中...' : '立即抽卡！'}
+                            </button>
+                            <button
+                                onClick={goBack}
+                                className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
+                            >
+                                🏠 回到主畫面
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+
             // 成功頁面組件
             const SuccessPage = ({ title, emoji, points, gameId }) => (
                 <div className="min-h-screen bg-gradient-to-br from-yellow-400 to-orange-500 flex flex-col items-center justify-center p-4 text-white">
@@ -514,7 +606,6 @@
                 </div>
             );
 
-
             // 根據當前頁面渲染
             const renderPage = () => {
                 switch (currentPage) {
@@ -524,12 +615,14 @@
                         return <MemoryCardGame />;
                     case 'jigsaw-puzzle':
                         return <JigsawPuzzleGame />;
+                    case 'gacha-game': // 抽卡遊戲頁面
+                        return <GachaGame />;
                     case 'success-number':
                         return <SuccessPage title="恭喜過關！" emoji="🎉" points={3} gameId="guess-number" />;
                     case 'success-memory':
                         return <SuccessPage title="記憶達人！" emoji="🎉" points={3} gameId="memory-card" />;
                     case 'success-puzzle':
-                        // 修正點數為 8，與 games 列表保持一致
+                        // 修正點數為 5，與 games 列表保持一致
                         return <SuccessPage title="拼圖大師！" emoji="🧩" points={games.find(g => g.id === 'jigsaw-puzzle').points} gameId="jigsaw-puzzle" />;
                     default:
                         return <HomePage />;
