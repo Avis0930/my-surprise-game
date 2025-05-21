@@ -21,6 +21,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         .no-zoom {
+            /* 讓在手機上操作時不會因為點擊或滑動而縮放頁面 */
             touch-action: pan-x pan-y;
         }
         /* 針對滑動拼圖的過渡效果 */
@@ -33,7 +34,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React; 
+        const { useState, useEffect, useRef } = React;
 
         const BirthdayGameApp = () => {
             const [currentPoints, setCurrentPoints] = useState(0);
@@ -44,7 +45,7 @@
             const games = [
                 { id: 'guess-number', name: '1A2B猜數字', points: 3, difficulty: '簡單', emoji: '🔢' },
                 { id: 'memory-card', name: '翻牌連連看', points: 3, difficulty: '中等', emoji: '🎴' },
-                { id: 'jigsaw-puzzle', name: '滑動拼圖', points: 8, difficulty: '困難', emoji: '🧩' }, 
+                { id: 'jigsaw-puzzle', name: '滑動拼圖', points: 8, difficulty: '困難', emoji: '🧩' },
                 { id: 'candy-crush', name: '糖果消消樂', points: 2, difficulty: '簡單', emoji: '🍭' }
             ];
             const completeGame = (gameId, points) => {
@@ -57,12 +58,13 @@
 
             // 滑動拼圖遊戲 (Sliding Puzzle with Image)
             const JigsawPuzzleGame = () => {
-                // 預設的圖片 URL
-                const defaultImageUrl = 'https://Avis0930.github.io/my-surprise-game/a5864e98e9319ed34e83cad7e8e65889.jpg'; // 這是一個公共圖片，通常不會有CORS問題
+                // 預設的圖片 URL - 請務必修改這裡為您在 GitHub 上傳的圖片連結！
+                // 範例：'https://Avis0930.github.io/my-surprise-game/my_surprise_image.jpg'
+                const defaultImageUrl = 'https://Avis0930.github.io/my-surprise-game/puzzle_jiwoo.jpg'; // <--- **請務必修改這裡！**
                 const [currentPuzzleImageUrl, setCurrentPuzzleImageUrl] = useState(defaultImageUrl);
                 const [inputImageUrl, setInputImageUrl] = useState(''); // 用於使用者輸入的 URL
 
-                const [tiles, setTiles] = useState([]); 
+                const [tiles, setTiles] = useState([]);
                 const [moves, setMoves] = useState(0);
                 const [gameOver, setGameOver] = useState(false);
                 const [loadingImage, setLoadingImage] = useState(true);
@@ -88,8 +90,8 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const pieceSize = 100; 
-                        const boardSize = 3; 
+                        const pieceSize = 100;
+                        const boardSize = 3;
 
                         canvas.width = pieceSize * boardSize;
                         canvas.height = pieceSize * boardSize;
@@ -100,14 +102,14 @@
                         let startX = 0;
                         let startY = 0;
 
-                        if (img.width > img.height) { 
+                        if (img.width > img.height) {
                             drawHeight = canvas.width / aspectRatio;
                             startY = (canvas.height - drawHeight) / 2;
-                        } else { 
+                        } else {
                             drawWidth = canvas.height * aspectRatio;
                             startX = (canvas.width - drawWidth) / 2;
                         }
-                        
+
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         ctx.drawImage(img, startX, startY, drawWidth, drawHeight);
 
@@ -123,19 +125,19 @@
                             pieceCanvas.height = pieceSize;
                             const pieceCtx = pieceCanvas.getContext('2d');
                             pieceCtx.drawImage(canvas, x, y, pieceSize, pieceSize, 0, 0, pieceSize, pieceSize);
-                            
+
                             generatedTiles.push({
-                                id: i, 
-                                dataUrl: pieceCanvas.toDataURL('image/png') 
+                                id: i,
+                                dataUrl: pieceCanvas.toDataURL('image/png')
                             });
                         }
 
                         // 將最後一塊設為空白
-                        generatedTiles[generatedTiles.length - 1].dataUrl = ''; 
+                        generatedTiles[generatedTiles.length - 1].dataUrl = '';
 
-                        setSolvedTileOrder(generatedTiles.map(t => t.id)); 
+                        setSolvedTileOrder(generatedTiles.map(t => t.id));
 
-                        let shuffledTiles = [...generatedTiles.map(t => ({...t}))]; 
+                        let shuffledTiles = [...generatedTiles.map(t => ({...t}))];
                         do {
                             const imageTiles = shuffledTiles.slice(0, -1);
                             for (let i = imageTiles.length - 1; i > 0; i--) {
@@ -144,7 +146,7 @@
                             }
                             shuffledTiles = [...imageTiles, shuffledTiles[shuffledTiles.length - 1]];
 
-                        } while (!isSolvable(shuffledTiles.map(t => t.id), boardSize) || isSolved(shuffledTiles.map(t => t.id))); 
+                        } while (!isSolvable(shuffledTiles.map(t => t.id), boardSize) || isSolved(shuffledTiles.map(t => t.id)));
 
                         setTiles(shuffledTiles);
                         setMoves(0);
@@ -157,17 +159,17 @@
                         setError('圖片載入失敗！請檢查URL或CORS設定。');
                         setLoadingImage(false);
                         // 可以考慮這裡清空拼圖或顯示預設錯誤圖片
-                        setTiles([]); 
+                        setTiles([]);
                         setGameOver(true); // 設置為遊戲結束狀態，禁止操作
                     };
                 };
 
                 const isSolvable = (currentTileIds, boardSize) => {
-                    const flatTiles = currentTileIds.filter(id => id !== solvedTileOrder[solvedTileOrder.length - 1]); 
+                    const flatTiles = currentTileIds.filter(id => id !== solvedTileOrder[solvedTileOrder.length - 1]);
                     let inversions = 0;
                     for (let i = 0; i < flatTiles.length - 1; i++) {
                         for (let j = i + 1; j < flatTiles.length; j++) {
-                            if (flatTiles[i] > flatTiles[j]) { 
+                            if (flatTiles[i] > flatTiles[j]) {
                                 inversions++;
                             }
                         }
@@ -188,20 +190,20 @@
                 const handleTileClick = (index) => {
                     if (gameOver || loadingImage || error || tiles.length === 0) return;
 
-                    const blankIndex = tiles.findIndex(t => t.dataUrl === ''); 
-                    
+                    const blankIndex = tiles.findIndex(t => t.dataUrl === '');
+
                     const row = Math.floor(index / 3);
                     const col = index % 3;
                     const blankRow = Math.floor(blankIndex / 3);
                     const blankCol = blankIndex % 3;
 
-                    const isAdjacent = 
-                        (Math.abs(row - blankRow) === 1 && col === blankCol) || 
-                        (Math.abs(col - blankCol) === 1 && row === blankRow);   
+                    const isAdjacent =
+                        (Math.abs(row - blankRow) === 1 && col === blankCol) ||
+                        (Math.abs(col - blankCol) === 1 && row === blankRow);
 
                     if (isAdjacent) {
                         const newTiles = [...tiles];
-                        [newTiles[index], newTiles[blankIndex]] = [newTiles[blankIndex], newTiles[index]]; 
+                        [newTiles[index], newTiles[blankIndex]] = [newTiles[blankIndex], newTiles[index]];
                         setTiles(newTiles);
                         setMoves(moves + 1);
 
@@ -268,7 +270,7 @@
                                         {error && (
                                             <div className="text-center text-red-600 font-bold text-lg p-2 bg-red-100 rounded-lg border border-red-300">
                                                 錯誤: {error}
-                                                <button 
+                                                <button
                                                     onClick={() => initializeImagePuzzle(defaultImageUrl)}
                                                     className="mt-2 bg-purple-500 text-white px-3 py-1 rounded-full text-sm hover:bg-purple-600"
                                                 >
@@ -290,12 +292,12 @@
                                                 <div className="grid grid-cols-3 gap-2 p-4 bg-gradient-to-b from-blue-100 to-purple-100 rounded-2xl border-4 border-purple-300">
                                                     {tiles.map((tile, index) => (
                                                         <button
-                                                            key={index} 
+                                                            key={index}
                                                             onClick={() => handleTileClick(index)}
                                                             className={`
                                                                 aspect-square rounded-lg flex items-center justify-center text-3xl font-black transition-transform duration-200 ease-out shadow-md overflow-hidden
-                                                                ${tile.dataUrl === '' 
-                                                                    ? 'bg-gray-200 cursor-default' 
+                                                                ${tile.dataUrl === ''
+                                                                    ? 'bg-gray-200 cursor-default'
                                                                     : 'bg-white text-purple-700 hover:scale-105 active:scale-95 cursor-pointer border-2 border-orange-400'
                                                                 }
                                                                 ${gameOver && tile.dataUrl === '' ? 'hidden' : ''}
@@ -335,18 +337,17 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <button
-                                onClick={() => setCurrentPage('home')}
-                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white"
-                            >
-                                回到首頁 🏠
-                            </button>
+                                <button
+                                    onClick={() => setCurrentPage('home')}
+                                    className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white"
+                                >
+                                    回到首頁 🏠
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                );
-            };
+                    );
+                };
 
             // 第一包的抽卡機制
             const addPoints = () => {
@@ -358,7 +359,7 @@
                 if (currentPoints < 5 || gameState !== 'ready') return;
                 setCurrentPoints(p => p - 5);
                 setGameState('drawing');
-                
+
                 setTimeout(() => {
                     setGameState('result');
                 }, 2000);
@@ -409,7 +410,7 @@
                         {/* 抽卡區域 */}
                         <div className="bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 border-4 border-white rounded-2xl p-6 mb-6">
                             <h3 className="font-black text-xl mb-4 text-white text-center">🎁 驚喜卡片 🎁</h3>
-                            
+
                             <div className="text-center">
                                 {/* READY 狀態 */}
                                 {gameState === 'ready' && (
@@ -448,7 +449,7 @@
                                             </div>
                                             <div className="text-white text-lg font-bold">超級大獎</div>
                                         </div>
-                                        
+
                                         <button
                                             onClick={resetGame}
                                             className="w-full bg-purple-500 text-white px-6 py-3 rounded-full font-bold hover:bg-purple-600"
@@ -465,7 +466,7 @@
                             {games.map((game, index) => {
                                 const gradients = [
                                     'from-pink-400 to-rose-400',
-                                    'from-cyan-400 to-blue-400', 
+                                    'from-cyan-400 to-blue-400',
                                     'from-purple-400 to-violet-400',
                                     'from-green-400 to-emerald-400'
                                 ];
@@ -595,7 +596,7 @@
                                                     猜測! 💫
                                                 </button>
                                             </div>
-                                            
+
                                             <div className="max-h-48 overflow-y-auto space-y-2">
                                                 {history.map((result, index) => (
                                                     <div key={index} className="p-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full text-center font-bold text-purple-700 border-2 border-purple-200">
@@ -667,12 +668,12 @@
                         id: index,
                         emoji
                     }));
-                    
+
                     for (let i = gameCards.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [gameCards[i], gameCards[j]] = [gameCards[j], gameCards[i]];
                     }
-                    
+
                     setCards(gameCards);
                     setFlippedCards([]);
                     setMatchedCards([]);
@@ -696,7 +697,7 @@
                         if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
                             const newMatched = [...matchedCards, first, second];
                             setMatchedCards(newMatched);
-                            
+
                             if (newMatched.length === cards.length) {
                                 completeGame('memory-card', 3);
                                 setTimerActive(false);
@@ -737,7 +738,7 @@
                                                     onClick={() => flipCard(card.id)}
                                                     className={`aspect-square text-2xl rounded-xl transition-all duration-300 border-2 border-white shadow-lg ${
                                                         flippedCards.includes(card.id) || matchedCards.includes(card.id)
-                                                        ? 'bg-gradient-to-r from-yellow-200 to-pink-200 shadow-xl' 
+                                                        ? 'bg-gradient-to-r from-yellow-200 to-pink-200 shadow-xl'
                                                             : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
                                                         } ${matchedCards.includes(card.id) ? 'opacity-60' : ''}`}
                                                 >
@@ -812,7 +813,7 @@
                         return <GuessNumberGame />;
                     case 'memory-card':
                         return <MemoryCardGame />;
-                    case 'jigsaw-puzzle': 
+                    case 'jigsaw-puzzle':
                         return <JigsawPuzzleGame />;
                     case 'success-number':
                         return <SuccessPage title="恭喜過關！" emoji="🎉" points={3} gameId="guess-number" />;
@@ -820,7 +821,7 @@
                         return <SuccessPage title="記憶達人！" emoji="🎉" points={3} gameId="memory-card" />;
                     case 'success-puzzle':
                         // 修正點數為 8，與 games 列表保持一致
-                        return <SuccessPage title="拼圖大師！" emoji="🧩" points={8} gameId="jigsaw-puzzle" />; 
+                        return <SuccessPage title="拼圖大師！" emoji="🧩" points={8} gameId="jigsaw-puzzle" />;
                     default:
                         return <HomePage />;
                 }
