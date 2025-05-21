@@ -58,9 +58,8 @@
 
             // 滑動拼圖遊戲 (Sliding Puzzle with Image)
             const JigsawPuzzleGame = () => {
-                // 預設的圖片 URL - 請務必修改這裡為您在 GitHub 上傳的圖片連結！
-                // 範例：'https://Avis0930.github.io/my-surprise-game/my_surprise_image.jpg'
-                const defaultImageUrl = 'https://Avis0930.github.io/my-surprise-game/puzzle_jiwoo.jpg'; // <--- **請務必修改這裡！**
+                // 預設的圖片 URL - 已根據您的資訊設定為 puzzle_jiwoo.jpg
+                const defaultImageUrl = 'https://Avis0930.github.io/my-surprise-game/puzzle_jiwoo.jpg';
                 const [currentPuzzleImageUrl, setCurrentPuzzleImageUrl] = useState(defaultImageUrl);
                 const [inputImageUrl, setInputImageUrl] = useState(''); // 用於使用者輸入的 URL
 
@@ -329,7 +328,7 @@
                                                 點擊與空白格相鄰的圖片方塊來移動它，直到圖片按參考圖的順序排列！
                                             </div>
                                             <button
-                                                onClick={() => initializeImagePuzzle(currentPuzzleImageUrl)} // 點擊重新開始時使用當前圖片 URL
+                                                onClick={() => initializeImagePuzzle(currentPuzzleImageUrl)}
                                                 className="w-full mt-3 bg-gradient-to-r from-blue-400 to-purple-500 text-white px-6 py-3 rounded-full font-black shadow-lg border-2 border-white"
                                             >
                                                 重新開始 🔄
@@ -613,9 +612,9 @@
                                             </div>
                                             <div className="text-xl font-black text-red-600 bg-red-100 rounded-full px-6 py-3">❌ 遊戲失敗！未獲得點數</div>
                                             <button
-                                                onClick={resetNumberGame}
-                                                className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white"
-                                            >
+                                                    onClick={resetNumberGame}
+                                                    className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white"
+                                                >
                                                 再挑戰一次! 💪
                                             </button>
                                         </div>
@@ -754,9 +753,9 @@
                                             </div>
                                             <div className="text-xl font-black text-red-600 bg-red-100 rounded-full px-6 py-3">❌ 遊戲失敗！未獲得點數</div>
                                             <button
-                                                onClick={initializeGame}
-                                                className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white"
-                                            >
+                                                    onClick={initializeGame}
+                                                    className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white"
+                                                >
                                                 再挑戰一次! 💪
                                             </button>
                                         </div>
