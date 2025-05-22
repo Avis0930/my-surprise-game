@@ -109,8 +109,8 @@
         /* 調整圖片尺寸和邊框 */
         .card-image {
             width: 100%;
-            max-width: 280px; /* 限制最大寬度 */
-            height: 280px; /* 固定高度，與 max-width 相同，以便於 cover 效果 */
+            max-width: 320px; /* 放大卡片尺寸 */
+            height: 320px; /* 固定高度，與 max-width 相同，以便於 cover 效果 */
             border-radius: 0.75rem; /* 圓角 */
             border: 5px solid; /* 邊框 */
             box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* 更強烈的陰影 */
@@ -124,43 +124,39 @@
         .card-image.sr { border-color: #8A2BE2; /* 紫色 */ }
         .card-image.r { border-color: #ADD8E6; /* 淺藍色 */ }
 
-        /* 稀有度標籤樣式 */
+        /* 稀有度標籤樣式 - 增強視覺效果 */
         .rarity-tag {
             font-weight: bold;
-            padding: 0.25rem 0.75rem;
+            padding: 0.4rem 1.2rem; /* 增加內邊距 */
             border-radius: 9999px; /* 全圓角 */
-            margin-top: 1rem;
-            display: inline-block; /* 讓其佔據內容寬度 */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            font-size: 0.9rem; /* 稍微小一點 */
+            margin-top: 1.5rem; /* 增加與圖片的間距 */
+            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* 更強的陰影 */
+            font-size: 1.1rem; /* 增大字體 */
+            text-transform: uppercase; /* 大寫 */
+            letter-spacing: 1px; /* 增加字距 */
+            position: relative; /* 為可能的進一步特效做準備 */
+            overflow: hidden; /* 隱藏超出邊界的內容 */
+            transition: all 0.3s ease;
         }
         .rarity-tag.ssr {
-            background: linear-gradient(to right, #FFD700, #FFA500); /* 金橙漸變 */
+            background: linear-gradient(45deg, #FFD700 0%, #FFA500 50%, #FFCC00 100%); /* 金橙漸變 */
             color: #8B4513; /* 深棕色文字 */
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.7); /* 更明顯的文字陰影 */
+            border: 2px solid #FFECB3; /* 淺金邊框 */
         }
         .rarity-tag.sr {
-            background: linear-gradient(to right, #8A2BE2, #EE82EE); /* 紫粉漸變 */
+            background: linear-gradient(45deg, #8A2BE2 0%, #EE82EE 50%, #DA70D6 100%); /* 紫粉漸變 */
             color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+            border: 2px solid #D8BFD8; /* 淺紫邊框 */
         }
         .rarity-tag.r {
-            background: linear-gradient(to right, #ADD8E6, #87CEEB); /* 淺藍漸變 */
+            background: linear-gradient(45deg, #ADD8E6 0%, #87CEEB 50%, #B0E0E6 100%); /* 淺藍漸變 */
             color: #333;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
+            border: 2px solid #E0FFFF; /* 淺藍邊框 */
         }
-
-        /* 抽卡結果文字 (已移除) */
-        /*
-        .result-text {
-            font-size: 1.5rem;
-            font-weight: black;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .result-text.ssr { color: #FFEB3B; }
-        .result-text.sr { color: #DA70D6; }
-        .result-text.r { color: #87CEFA; }
-        */
 
         /* 抽卡動畫 */
         @keyframes rotate-in {
@@ -207,9 +203,9 @@
             const cardImages = {
                 ssr: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr3.jpg?raw=true',
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr4.jpg?raw=true',
                     // 如果您有更多 SSR 圖片，請在此添加
                 ],
                 sr: [
@@ -223,15 +219,15 @@
                 ],
                 r: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r2.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r3.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r4.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r5.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r6.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r7.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r8.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r9.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r10.jpg',
                     // 如果您有更多 R 圖片，請在此添加
                 ]
             };
@@ -384,11 +380,9 @@
                                                 onClick={() => whackMole(holeIndex)}
                                             >
                                                 {activeHole === holeIndex ? (
-                                                    <div className="absolute inset-0 flex items-center justify-center">
-                                                        <span className="text-6xl cursor-pointer select-none mole-active">
+                                                    <span className="absolute inset-0 flex items-center justify-center text-6xl cursor-pointer select-none mole-active">
                                                             🐹
-                                                        </span>
-                                                    </div>
+                                                    </span>
                                                 ) : (
                                                     <span className="text-4xl text-yellow-600 select-none">🕳️</span>
                                                 )}
@@ -853,7 +847,9 @@
 
                         {/* 抽卡區域 */}
                         <div className="bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 border-4 border-white rounded-2xl p-6 mb-6">
-                            <h3 className="font-black text-xl mb-4 text-white text-center">🎁 驚喜卡片 🎁</h3>
+                            {/* START: 抽卡區標題調整 */}
+                            <h3 className="font-black text-xl mb-4 text-white text-center">✨ 您的卡片 ✨</h3>
+                            {/* END: 抽卡區標題調整 */}
                             
                             <div className="text-center">
                                 {/* READY 狀態 */}
@@ -892,12 +888,11 @@
                                                 className={`card-image ${drawResult.type}`}
                                             />
                                         )}
+                                        {/* START: 稀有度標籤優化 */}
                                         <div className={`rarity-tag ${drawResult.type}`}>
                                             {drawResult.type.toUpperCase()}
                                         </div>
-                                        {/* START: 抽卡結果文字調整 - 已移除重複文字 */}
-                                        {/* 原有的 result-text 區塊已移除 */}
-                                        {/* END: 抽卡結果文字調整 */}
+                                        {/* END: 稀有度標籤優化 */}
                                         
                                         <button
                                             onClick={resetGame}
