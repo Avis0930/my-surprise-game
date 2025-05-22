@@ -110,13 +110,13 @@
         .card-image {
             width: 100%;
             max-width: 280px; /* 限制最大寬度 */
-            height: auto; /* 自動高度 */
+            height: 280px; /* 固定高度，與 max-width 相同，以便於 cover 效果 */
             border-radius: 0.75rem; /* 圓角 */
             border: 5px solid; /* 邊框 */
             box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* 更強烈的陰影 */
             transition: all 0.3s ease-in-out;
-            object-fit: contain; /* 確保圖片內容完整顯示 */
-            aspect-ratio: 3 / 4; /* 調整為更常見的卡片比例，例如 3:4 */
+            object-fit: cover; /* 讓圖片填滿容器，可能會裁切部分內容 */
+            aspect-ratio: 1 / 1; /* 保持正方形 */
         }
 
         /* 稀有度邊框顏色 */
@@ -150,16 +150,17 @@
             text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
         }
 
-        /* 抽卡結果文字 */
+        /* 抽卡結果文字 (已移除) */
+        /*
         .result-text {
-            font-size: 1.5rem; /* 放大字體 */
+            font-size: 1.5rem;
             font-weight: black;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        .result-text.ssr { color: #FFEB3B; /* 亮黃色 */ }
-        .result-text.sr { color: #DA70D6; /* 紫羅蘭色 */ }
-        .result-text.r { color: #87CEFA; /* 亮天藍色 */ }
-
+        .result-text.ssr { color: #FFEB3B; }
+        .result-text.sr { color: #DA70D6; }
+        .result-text.r { color: #87CEFA; }
+        */
 
         /* 抽卡動畫 */
         @keyframes rotate-in {
@@ -207,8 +208,8 @@
                 ssr: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr3.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr4.jpg',
+                    'https.githubusercontent.com/Avis0930/my-surprise-game/blob/main/images/ssr3.jpg?raw=true',
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr4.jpg?raw=true',
                     // 如果您有更多 SSR 圖片，請在此添加
                 ],
                 sr: [
@@ -894,12 +895,8 @@
                                         <div className={`rarity-tag ${drawResult.type}`}>
                                             {drawResult.type.toUpperCase()}
                                         </div>
-                                        {/* START: 抽卡結果文字調整 - 已移除標點符號 */}
-                                        <div className={`result-text ${drawResult.type} text-center`}>
-                                            {drawResult.type === 'ssr' ? '✨ SSR' :
-                                             drawResult.type === 'sr' ? '💎 SR' :
-                                             '🌟 R'}
-                                        </div>
+                                        {/* START: 抽卡結果文字調整 - 已移除重複文字 */}
+                                        {/* 原有的 result-text 區塊已移除 */}
                                         {/* END: 抽卡結果文字調整 */}
                                         
                                         <button
