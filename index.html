@@ -158,13 +158,36 @@
             border: 2px solid #E0FFFF; /* 淺藍邊框 */
         }
 
-        /* 抽卡動畫 */
-        @keyframes rotate-in {
-            0% { transform: scale(0.5) rotateY(180deg); opacity: 0; }
-            100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+        /* 抽卡動畫 - 揭示 */
+        @keyframes flip-in {
+            0% { transform: perspective(800px) rotateY(-90deg) scale(0.8); opacity: 0; }
+            70% { transform: perspective(800px) rotateY(10deg) scale(1.05); opacity: 1; }
+            100% { transform: perspective(800px) rotateY(0deg) scale(1); opacity: 1; }
         }
-        .card-enter {
-            animation: rotate-in 0.5s forwards;
+        .card-reveal {
+            animation: flip-in 0.6s ease-out forwards;
+        }
+
+        /* 抽卡中動畫 - 旋轉等待 */
+        @keyframes card-shuffling {
+            0% { transform: perspective(600px) rotateY(0deg); }
+            50% { transform: perspective(600px) rotateY(180deg); }
+            100% { transform: perspective(600px) rotateY(360deg); }
+        }
+        .card-shuffling {
+            animation: card-shuffling 1.5s infinite linear;
+            background-color: #333; /* 卡片背面顏色 */
+            border-radius: 0.75rem;
+            width: 100%;
+            max-width: 320px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            border: 5px dashed #FFD700; /* 金色虛線邊框 */
         }
 
     </style>
@@ -204,9 +227,8 @@
                 ssr: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr3.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr4.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr5.jpg',
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr3.jpg?raw=true',
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr4.jpg?raw=true',
                     // 如果您有更多 SSR 圖片，請在此添加
                 ],
                 sr: [
@@ -216,10 +238,6 @@
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr4.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr5.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr6.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr7.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr8.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr9.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr10.jpg',
                     // 如果您有更多 SR 圖片，請在此添加
                 ],
                 r: [
@@ -233,14 +251,24 @@
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r8.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r9.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r10.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r11.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r12.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r13.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r14.jpg',
                     // 如果您有更多 R 圖片，請在此添加
                 ]
             };
             // *** END: 抽卡圖片配置 ***
+
+            // --- START: 圖片預載入 ---
+            useEffect(() => {
+                console.log('開始預載入圖片...');
+                Object.values(cardImages).forEach(imageArray => {
+                    imageArray.forEach(url => {
+                        const img = new Image();
+                        img.src = url;
+                        img.onload = () => console.log(`圖片載入完成: ${url}`);
+                        img.onerror = () => console.error(`圖片載入失敗: ${url}`);
+                    });
+                });
+            }, []); // 空依賴陣列表示只在組件首次渲染時執行一次
+            // --- END: 圖片預載入 ---
 
             // 打地鼠遊戲組件 (不變動)
             const WhackAMoleGame = () => {
@@ -786,6 +814,7 @@
                 setGameState('drawing');
                 console.log('開始抽卡，狀態->drawing');
                 
+                // 抽卡延遲縮短到 1 秒
                 setTimeout(() => {
                     // 根據抽卡結果設定 drawResult (隨機選一張圖片)
                     const rarityRoll = Math.random();
@@ -807,7 +836,7 @@
                     setDrawResult({ type: chosenType, url: chosenCardUrl });
                     setGameState('result');
                     console.log('計時器執行，狀態->result');
-                }, 2000);
+                }, 1000); // 縮短延遲
             };
 
             const resetGame = () => {
@@ -879,17 +908,19 @@
                                     </div>
                                 )}
 
-                                {/* DRAWING 狀態 */}
+                                {/* DRAWING 狀態 - 優化抽卡中動畫 */}
                                 {gameState === 'drawing' && (
-                                    <div className="space-y-4">
-                                        <div className="text-6xl animate-spin">🎴</div>
+                                    <div className="flex flex-col items-center justify-center space-y-4">
+                                        <div className="card-shuffling">
+                                            ？
+                                        </div>
                                         <div className="text-white font-bold text-xl animate-pulse">抽卡中...</div>
                                     </div>
                                 )}
 
                                 {/* RESULT 狀態 - 優化排版和文字 */}
                                 {gameState === 'result' && drawResult && (
-                                    <div className="flex flex-col items-center justify-center space-y-4 card-enter">
+                                    <div className="flex flex-col items-center justify-center space-y-4 card-reveal">
                                         {drawResult.url && (
                                             <img
                                                 src={drawResult.url}
