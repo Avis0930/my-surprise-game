@@ -21,12 +21,99 @@
             -webkit-tap-highlight-color: transparent;
         }
         .no-zoom {
-            /* 讓在手機上操作時不會因為點擊或滑動而縮放頁面 */
             touch-action: pan-x pan-y;
         }
-        /* 針對滑動拼圖的過渡效果 */
-        .puzzle-piece {
-            transition: transform 0.2s ease-out;
+        /* 定義地鼠動畫 */
+        @keyframes whack-in {
+            0% { transform: translateY(100%) scale(0.8); }
+            50% { transform: translateY(-10%) scale(1.1); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        @keyframes whack-out {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(100%) scale(0.8); }
+        }
+        .mole-active {
+            animation: whack-in 0.2s forwards;
+        }
+        .mole-hit {
+            animation: whack-out 0.2s forwards;
+            filter: grayscale(100%); /* 點擊後變灰 */
+        }
+        .mole-disappear {
+            animation: whack-out 0.2s forwards;
+        }
+
+        /* Candy Crush 遊戲樣式 */
+        .candy-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            width: 100%; /* 確保網格在容器內填滿 */
+            max-width: 300px; /* 限制最大寬度，避免過大 */
+            margin: 0 auto; /* 置中 */
+            aspect-ratio: 1 / 1; /* 保持正方形 */
+            background-color: #8B4513; /* 巧克力色背景 */
+            padding: 5px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .candy-tile {
+            width: 100%;
+            padding-bottom: 100%; /* Make them square */
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem; /* 糖果表情符號大小 */
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.1); /* 淺色背景，讓糖果更突出 */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.1s ease-out, opacity 0.2s ease-out;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+            /* 優化：告知瀏覽器這些屬性將會改變 */
+            will-change: transform, opacity;
+        }
+        .candy-tile.selected {
+            border: 3px solid #FFD700; /* 黃金邊框選中 */
+            box-shadow: 0 0 15px #FFD700;
+        }
+        /* 優化：更快的消除動畫 */
+        .candy-tile.clearing {
+            animation: fadeOut 0.2s forwards; /* 消除時的動畫時間縮短 */
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.2); } /* 縮小更多以加速消失感 */
+        }
+        /* 優化：糖果下落動畫 */
+        .candy-tile.falling {
+            animation: fallDown 0.2s ease-out forwards;
+        }
+        @keyframes fallDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .candy-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 抽卡圖片樣式 */
+        .card-image {
+            width: 100%;
+            height: 300px; /* 固定高度，避免圖片大小不一造成跳動 */
+            object-fit: cover; /* 裁剪圖片以填充容器 */
+            border-radius: 1rem; /* 圓角 */
+            border: 4px solid white; /* 白色邊框 */
+            box-shadow: 0 0 15px rgba(0,0,0,0.3); /* 陰影 */
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -34,574 +121,1075 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React; // 加入 useRef 以便使用
-
+        const { useState, useEffect, useRef } = React;
         const BirthdayGameApp = () => {
             const [currentPoints, setCurrentPoints] = useState(0);
             const [currentPage, setCurrentPage] = useState('home');
-            const [history, setHistory] = useState([]); // 用於儲存頁面歷史
-            const [completedGames, setCompletedGames] = useState({}); // 記錄已完成的遊戲
+            const [gameResults, setGameResults] = useState({});
+            // 抽卡狀態
+            const [gameState, setGameState] = useState('ready');
+            // 新增抽卡結果狀態
+            const [drawResult, setDrawResult] = useState(null); // { type: 'legendary', url: '...' }
+            console.log('渲染狀態:', gameState, '點數:', currentPoints);
 
-            // 遊戲資料
             const games = [
-                { id: 'guess-number', name: '猜數字遊戲', description: '數字秘密，等你來猜！', points: 3, page: 'guess-number' },
-                { id: 'memory-card', name: '記憶翻牌遊戲', description: '考驗你的記憶力！', points: 3, page: 'memory-card' },
-                { id: 'jigsaw-puzzle', name: '滑動拼圖遊戲', description: '碎片拼湊，展現大圖！', points: 5, page: 'jigsaw-puzzle' },
-                { id: 'gacha-game', name: '幸運抽卡遊戲', description: '試試手氣，抽大獎！', points: 5, page: 'gacha-game' } // 重新加入抽卡遊戲的入口
+                { id: 'guess-number', name: '1A2B猜數字', points: 2, difficulty: '簡單', emoji: '🔢' },
+                { id: 'memory-card', name: '翻牌連連看', points: 3, difficulty: '中等', emoji: '🎴' },
+                { id: 'whack-a-mole', name: '打地鼠', points: 4, difficulty: '中等', emoji: '🐭' },
+                { id: 'candy-crush', name: '糖果消消樂', points: 5, difficulty: '困難', emoji: '🍬' }
             ];
-
-            // 導航到指定頁面
-            const navigateTo = (page, params = {}) => {
-                setHistory(prev => [...prev, currentPage]); // 儲存當前頁面
-                setCurrentPage(page);
-                // 可以在這裡處理參數，如果需要的話
+            const completeGame = (gameId, points) => {
+                setCurrentPoints(prev => prev + points);
+                setGameResults(prev => ({
+                    ...prev,
+                    [gameId]: (prev[gameId] || 0) + 1
+                }));
             };
 
-            // 返回上一頁
-            const goBack = () => {
-                if (history.length > 0) {
-                    const prevPage = history.pop();
-                    setCurrentPage(prevPage);
-                    setHistory([...history]); // 更新 history 狀態以觸發重新渲染
-                } else {
-                    setCurrentPage('home'); // 如果沒有歷史，回到主頁
-                }
+            // *** START: 抽卡圖片配置 ***
+            // 請將這些 URL 替換為您自己的 GitHub 圖片 URL
+            const cardImages = {
+                legendary: [
+                    'https://raw.githubusercontent.com/yinyen1999/testimg/main/images/legendary1.jpg', // 替換為您的傳說級圖片1
+                    // 'https://raw.githubusercontent.com/your-username/your-repo/main/images/legendary2.jpg', // 如果有更多，請新增
+                ],
+                rare: [
+                    'https://raw.githubusercontent.com/yinyen1999/testimg/main/images/rare1.jpg', // 替換為您的稀有級圖片1
+                    'https://raw.githubusercontent.com/yinyen1999/testimg/main/images/rare2.jpg', // 替換為您的稀有級圖片2
+                    'https://raw.githubusercontent.com/yinyen1999/testimg/main/images/rare3.jpg', // 替換為您的稀有級圖片3
+                ],
+                normal: [
+                    'https://raw.githubusercontent.com/yinyen1999/testimg/main/images/normal1.jpg', // 替換為您的普通級圖片1
+                    'https://raw.githubusercontent.com/yinyen1999/testimg/main/images/normal2.jpg', // 替換為您的普通級圖片2
+                    'https://raw.githubusercontent.com/yinyen1999/testimg/main/images/normal3.jpg', // 替換為您的普通級圖片3
+                    'https://raw.githubusercontent.com/yinyen1999/testimg/main/images/normal4.jpg', // 替換為您的普通級圖片4
+                ]
+            };
+            // *** END: 抽卡圖片配置 ***
+
+
+            // 打地鼠遊戲組件 (不變動)
+            const WhackAMoleGame = () => {
+                const [score, setScore] = useState(0);
+                const [timeLeft, setTimeLeft] = useState(30);
+                const [activeHole, setActiveHole] = useState(null); // 當前有地鼠的洞
+                const [gameOver, setGameOver] = useState(false);
+                const [gameStarted, setGameStarted] = useState(false);
+                const timerRef = useRef(null);
+                const moleTimerRef = useRef(null);
+
+                const moles = Array.from({ length: 9 }, (_, i) => i); // 9個洞
+
+                const startGame = () => {
+                    setScore(0);
+                    setTimeLeft(30);
+                    setActiveHole(null);
+                    setGameOver(false);
+                    setGameStarted(true);
+                    startTimer();
+                    showMole();
+                };
+
+                const startTimer = () => {
+                    timerRef.current = setInterval(() => {
+                        setTimeLeft(prevTime => {
+                            if (prevTime <= 1) {
+                                clearInterval(timerRef.current);
+                                clearInterval(moleTimerRef.current);
+                                setGameOver(true);
+                                setActiveHole(null);
+                                return 0;
+                            }
+                            return prevTime - 1;
+                        });
+                    }, 1000);
+                };
+
+                const showMole = () => {
+                    const randomDelay = Math.random() * (1.2 - 0.8) + 0.8; // 0.8-1.2秒出現
+                    moleTimerRef.current = setTimeout(() => {
+                        let newHole = Math.floor(Math.random() * moles.length);
+                        while (newHole === activeHole) { // 避免連續在同一個洞
+                            newHole = Math.floor(Math.random() * moles.length);
+                        }
+                        setActiveHole(newHole);
+
+                        const disappearDelay = Math.random() * (2.5 - 1.5) + 1.5; // 1.5-2.5秒消失
+                        setTimeout(() => {
+                            if (activeHole === newHole) { // 如果還沒被擊中
+                                setActiveHole(null);
+                            }
+                            if (!gameOver) {
+                                showMole(); // 繼續顯示下一隻地鼠
+                            }
+                        }, disappearDelay * 1000);
+                    }, randomDelay * 1000);
+                };
+
+                const whackMole = (holeIndex) => {
+                    if (gameOver || activeHole !== holeIndex) {
+                        return;
+                    }
+                    setScore(prevScore => prevScore + 1);
+                    setActiveHole(null); // 地鼠被擊中後立即消失
+                    
+                    // 點擊後立即顯示下一隻地鼠，不等待消失動畫完成
+                    if (!gameOver) {
+                        clearTimeout(moleTimerRef.current); // 清除當前地鼠的消失計時器
+                        showMole();
+                    }
+                };
+
+                useEffect(() => {
+                    return () => {
+                        clearInterval(timerRef.current);
+                        clearTimeout(moleTimerRef.current);
+                    };
+                }, []);
+
+                useEffect(() => {
+                    if (gameOver) {
+                        if (score >= 15) {
+                            completeGame('whack-a-mole', 4); // 更新點數為4
+                            setCurrentPage('success-whack-a-mole');
+                        }
+                    }
+                }, [gameOver, score]);
+
+                const formatTime = (seconds) => {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                };
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-green-300 via-lime-400 to-emerald-500 p-4 no-zoom flex items-center justify-center">
+                        <div className="max-w-md mx-auto text-center w-full">
+                            <div className="bg-white/95 backdrop-blur-sm border-4 border-green-500 shadow-xl rounded-2xl overflow-hidden p-6 mb-6">
+                                <h2 className="text-center font-black text-xl text-green-700 mb-2">🔨 打地鼠遊戲</h2>
+                                <p className="text-center text-sm text-gray-600 font-semibold mb-4">
+                                    擊中地鼠獲得分數，時間內達到15分即可過關！
+                                </p>
+                                <div className="flex justify-between items-center mb-4 bg-lime-100 rounded-full px-4 py-2 border-2 border-lime-200">
+                                    <div className="text-lg font-bold text-green-700">分數: {score}</div>
+                                    <div className={`text-xl font-bold ${timeLeft <= 10 && !gameOver ? 'text-red-500 animate-pulse' : 'text-green-700'}`}>
+                                        時間: {formatTime(timeLeft)}
+                                    </div>
+                                </div>
+
+                                {!gameStarted && !gameOver ? (
+                                    <button
+                                        onClick={startGame}
+                                        className="w-full bg-gradient-to-r from-green-500 to-green-700 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                                    >
+                                        🚀 開始遊戲
+                                    </button>
+                                ) : gameOver ? (
+                                    <div className="space-y-4">
+                                        <div className="text-4xl font-black text-green-700">
+                                            {score >= 15 ? '🎉 恭喜過關！' : '😅 時間結束！'}
+                                        </div>
+                                        <div className="text-xl font-bold text-gray-700 bg-gray-100 rounded-full px-4 py-2">
+                                            最終分數: {score}
+                                        </div>
+                                        {score < 15 && (
+                                            <div className="text-lg font-bold text-red-600 bg-red-100 rounded-full px-4 py-2">
+                                                未達到 {15} 分，沒有獲得獎勵哦！
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={startGame}
+                                            className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                                        >
+                                            🔄 再玩一次
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-3 gap-3 bg-gradient-to-br from-yellow-700 to-orange-800 p-4 rounded-xl border-4 border-yellow-600 shadow-inner">
+                                        {moles.map((holeIndex) => (
+                                            <div
+                                                key={holeIndex}
+                                                className="relative w-full aspect-square bg-gradient-to-br from-yellow-900 to-yellow-700 rounded-full flex items-center justify-center overflow-hidden"
+                                                style={{ boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }}
+                                                onClick={() => whackMole(holeIndex)}
+                                            >
+                                                {activeHole === holeIndex ? (
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <span className="text-6xl cursor-pointer select-none mole-active">
+                                                            🐹
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-4xl text-yellow-600 select-none">🕳️</span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage('home')}
+                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                            >
+                                🏠 回到首頁
+                            </button>
+                        </div>
+                    </div>
+                );
             };
 
-            // 處理遊戲完成並增加點數
-            const handleGameComplete = (gameId, pointsAwarded) => {
-                setCurrentPoints(prevPoints => prevPoints + pointsAwarded);
-                setCompletedGames(prev => ({ ...prev, [gameId]: true }));
+            // 糖果消消樂遊戲組件
+            const CandyCrushGame = () => {
+                const candies = ['🍭', '🍬', '🍫', '🧁', '🍩'];
+                const rows = 6;
+                const cols = 6;
+                const targetScore = 500; 
+
+                // 使用 state 儲存帶有狀態的 grid (例如是否正在清除、下落)
+                const [grid, setGrid] = useState([]);
+                const [score, setScore] = useState(0);
+                const [timeLeft, setTimeLeft] = useState(30);
+                const [gameOver, setGameOver] = useState(false);
+                const [gameStarted, setGameStarted] = useState(false);
+                const [selectedCandy, setSelectedCandy] = useState(null); // {row, col}
+                const gameIntervalRef = useRef(null);
+
+                // 生成初始網格
+                const generateInitialGrid = () => {
+                    const newGrid = Array(rows).fill(null).map(() => Array(cols).fill(null));
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            newGrid[r][c] = { emoji: candies[Math.floor(Math.random() * candies.length)], status: 'normal' };
+                        }
+                    }
+                    // 確保初始網格沒有直接可消除的組合
+                    let hasMatch = true;
+                    while (hasMatch) {
+                        hasMatch = false;
+                        const matches = checkMatches(newGrid);
+                        if (matches.length > 0) {
+                            hasMatch = true;
+                            // 重新隨機化有匹配的糖果
+                            matches.forEach(({ r, c }) => {
+                                newGrid[r][c] = { emoji: candies[Math.floor(Math.random() * candies.length)], status: 'normal' };
+                            });
+                        }
+                    }
+                    return newGrid;
+                };
+
+                // 檢查是否有連線並返回所有匹配的糖果位置
+                const checkMatches = (currentGrid) => {
+                    const matches = new Set(); // 使用 Set 儲存 'r-c' 字符串，避免重複
+                
+                    // 檢查水平連線
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c <= cols - 3; c++) {
+                            const candy = currentGrid[r][c].emoji;
+                            if (candy && candy === currentGrid[r][c + 1].emoji && candy === currentGrid[r][c + 2].emoji) {
+                                // 找到至少3個連線
+                                let lineLength = 3;
+                                while (c + lineLength < cols && candy === currentGrid[r][c + lineLength].emoji) {
+                                    lineLength++;
+                                }
+                                for (let i = 0; i < lineLength; i++) {
+                                    matches.add(`${r}-${c + i}`);
+                                }
+                            }
+                        }
+                    }
+                
+                    // 檢查垂直連線
+                    for (let c = 0; c < cols; c++) {
+                        for (let r = 0; r <= rows - 3; r++) {
+                            const candy = currentGrid[r][c].emoji;
+                            if (candy && candy === currentGrid[r + 1][c].emoji && candy === currentGrid[r + 2][c].emoji) {
+                                // 找到至少3個連線
+                                let lineLength = 3;
+                                while (r + lineLength < rows && candy === currentGrid[r + lineLength][c].emoji) {
+                                    lineLength++;
+                                }
+                                for (let i = 0; i < lineLength; i++) {
+                                    matches.add(`${r + i}-${c}`);
+                                }
+                            }
+                        }
+                    }
+                    return Array.from(matches).map(pos => {
+                        const [r, c] = pos.split('-').map(Number);
+                        return { r, c };
+                    });
+                };
+                
+                // 執行消除、分數計算、下落、補充，並遞迴檢查連擊
+                const processMatches = async (initialGrid) => {
+                    let currentGrid = JSON.parse(JSON.stringify(initialGrid));
+                    let totalScoreFromThisMove = 0;
+                    let iteration = 0;
+
+                    while (true) {
+                        iteration++;
+                        const matches = checkMatches(currentGrid);
+                        if (matches.length === 0) {
+                            break; // 沒有可消除的了，結束
+                        }
+
+                        // 計算本次消除的分數
+                        const matchedGroups = groupMatches(matches); // 將匹配的位置分組
+                        matchedGroups.forEach(group => {
+                            const length = group.length;
+                            if (length === 3) totalScoreFromThisMove += 30; // 3顆得分30
+                            else if (length === 4) totalScoreFromThisMove += 60; // 4顆得分60
+                            else if (length >= 5) totalScoreFromThisMove += 100; // 5顆或更多得分100
+                        });
+
+                        // 標記要消除的糖果為 null，並添加 'clearing' 狀態
+                        matches.forEach(({ r, c }) => {
+                            currentGrid[r][c].status = 'clearing';
+                        });
+                        // 使用 requestAnimationFrame 確保在下一個動畫幀更新 UI
+                        await new Promise(resolve => requestAnimationFrame(() => {
+                            setGrid(JSON.parse(JSON.stringify(currentGrid))); // 更新 UI 顯示消除動畫
+                            resolve();
+                        }));
+
+                        await new Promise(resolve => setTimeout(resolve, 200)); // 讓消除動畫播放時間縮短
+
+                        // 將已清除的糖果設為 null，開始下落
+                        matches.forEach(({ r, c }) => {
+                            currentGrid[r][c] = { emoji: null, status: 'cleared' }; // 標記為 cleared
+                        });
+
+                        // 下落
+                        const fallingCandies = []; // 儲存下落的糖果及其目標位置
+                        for (let c = 0; c < cols; c++) {
+                            let writeRow = rows - 1;
+                            for (let r = rows - 1; r >= 0; r--) {
+                                if (currentGrid[r][c].emoji !== null) {
+                                    if (r !== writeRow) { // 如果糖果需要移動
+                                        fallingCandies.push({ from: r, to: writeRow, col: c });
+                                    }
+                                    currentGrid[writeRow][c] = currentGrid[r][c];
+                                    writeRow--;
+                                }
+                            }
+                            for (let r = writeRow; r >= 0; r--) {
+                                currentGrid[r][c] = { emoji: candies[Math.floor(Math.random() * candies.length)], status: 'falling' };
+                            }
+                        }
+                        
+                        await new Promise(resolve => requestAnimationFrame(() => {
+                            setGrid(JSON.parse(JSON.stringify(currentGrid))); // 更新 UI 顯示下落和補充
+                            resolve();
+                        }));
+
+                        await new Promise(resolve => setTimeout(resolve, 200)); // 讓下落動畫播放時間縮短
+
+                        // 將所有糖果狀態恢復正常
+                        for (let r = 0; r < rows; r++) {
+                            for (let c = 0; c < cols; c++) {
+                                currentGrid[r][c].status = 'normal';
+                            }
+                        }
+                        await new Promise(resolve => requestAnimationFrame(() => {
+                            setGrid(JSON.parse(JSON.stringify(currentGrid))); // 更新 UI 顯示最終狀態
+                            resolve();
+                        }));
+
+                        // 檢查是否有新的連擊，如果有則繼續迴圈
+                    }
+                    setScore(s => s + totalScoreFromThisMove); // 將總分加到遊戲分數
+                };
+
+
+                // 輔助函數：將匹配的單個位置分組為實際的連線
+                const groupMatches = (matches) => {
+                    const visited = new Set();
+                    const groups = [];
+
+                    matches.forEach(match => {
+                        const { r, c } = match;
+                        if (!visited.has(`${r}-${c}`)) {
+                            const currentGroup = [];
+                            const queue = [{ r, c }];
+                            visited.add(`${r}-${c}`);
+                            
+                            while (queue.length > 0) {
+                                const { r: currR, c: currC } = queue.shift();
+                                currentGroup.push({ r: currR, c: currC });
+
+                                const directions = [
+                                    [-1, 0], [1, 0], [0, -1], [0, 1] // Up, Down, Left, Right
+                                ];
+
+                                for (const [dr, dc] of directions) {
+                                    const newR = currR + dr;
+                                    const newC = currC + dc;
+
+                                    if (
+                                        matches.some(m => m.r === newR && m.c === newC) && // 是匹配的一部分
+                                        !visited.has(`${newR}-${newC}`)
+                                    ) {
+                                        visited.add(`${newR}-${newC}`);
+                                        queue.push({ r: newR, c: newC });
+                                    }
+                                }
+                            }
+                            groups.push(currentGroup);
+                        }
+                    });
+                    return groups;
+                };
+
+
+                const startGame = () => {
+                    setScore(0);
+                    setTimeLeft(30);
+                    setGameOver(false);
+                    setGameStarted(true);
+                    setSelectedCandy(null);
+                    const initialGrid = generateInitialGrid();
+                    setGrid(initialGrid);
+
+                    clearInterval(gameIntervalRef.current);
+                    gameIntervalRef.current = setInterval(() => {
+                        setTimeLeft(prevTime => {
+                            if (prevTime <= 1) {
+                                clearInterval(gameIntervalRef.current);
+                                setGameOver(true);
+                                return 0;
+                            }
+                            return prevTime - 1;
+                        });
+                    }, 1000);
+                };
+
+                useEffect(() => {
+                    if (gameOver) {
+                        clearInterval(gameIntervalRef.current);
+                        if (score >= targetScore) {
+                            completeGame('candy-crush', 5); 
+                            setCurrentPage('success-candy-crush');
+                        }
+                    }
+                }, [gameOver, score]);
+
+                useEffect(() => {
+                    return () => clearInterval(gameIntervalRef.current);
+                }, []);
+
+                const handleCandyClick = async (r, c) => {
+                    if (gameOver || !gameStarted) return;
+
+                    if (selectedCandy) {
+                        // 第二次點擊
+                        const prevR = selectedCandy.r;
+                        const prevC = selectedCandy.c;
+
+                        // 檢查是否為相鄰糖果
+                        const isAdjacent = (
+                            (Math.abs(r - prevR) === 1 && c === prevC) ||
+                            (Math.abs(c - prevC) === 1 && r === prevR)
+                        );
+
+                        if (isAdjacent) {
+                            const newGrid = JSON.parse(JSON.stringify(grid));
+                            // 在新的複製網格上交換
+                            [newGrid[r][c].emoji, newGrid[prevR][prevC].emoji] = [newGrid[prevR][prevC].emoji, newGrid[r][c].emoji];
+                            
+                            // 立即更新 UI 顯示交換
+                            await new Promise(resolve => requestAnimationFrame(() => {
+                                setGrid(newGrid);
+                                resolve();
+                            }));
+                            
+                            // 檢查交換後是否有連線
+                            const hasMatch = checkMatches(newGrid).length > 0;
+                            if (hasMatch) {
+                                // 有連線，消除並補充 (等待 processMatches 完成)
+                                await processMatches(newGrid); 
+                            } else {
+                                // 沒有連線，換回來
+                                await new Promise(resolve => setTimeout(resolve, 200)); // 給一點時間讓玩家看到交換但沒消除
+                                [newGrid[r][c].emoji, newGrid[prevR][prevC].emoji] = [newGrid[prevR][prevC].emoji, newGrid[r][c].emoji]; // 換回來
+                                await new Promise(resolve => requestAnimationFrame(() => {
+                                    setGrid(newGrid);
+                                    resolve();
+                                }));
+                            }
+                        }
+                        setSelectedCandy(null); // 清除選取
+                    } else {
+                        // 第一次點擊
+                        setSelectedCandy({ r, c });
+                    }
+                };
+
+                const formatTime = (seconds) => {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                };
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-red-300 via-orange-400 to-yellow-500 p-4 no-zoom flex items-center justify-center">
+                        <div className="max-w-md mx-auto text-center w-full">
+                            <div className="bg-white/95 backdrop-blur-sm border-4 border-orange-500 shadow-xl rounded-2xl overflow-hidden p-6 mb-6">
+                                <h2 className="text-center font-black text-xl text-orange-700 mb-2">🍬 糖果消消樂</h2>
+                                <p className="text-center text-sm text-gray-600 font-semibold mb-4">
+                                    交換糖果，達成3個以上連線消除！目標分數 {targetScore}！
+                                </p>
+                                <div className="flex justify-between items-center mb-4 bg-yellow-100 rounded-full px-4 py-2 border-2 border-yellow-200">
+                                    <div className="text-lg font-bold text-orange-700">分數: {score}</div>
+                                    <div className={`text-xl font-bold ${timeLeft <= 10 && !gameOver ? 'text-red-500 animate-pulse' : 'text-orange-700'}`}>
+                                        時間: {formatTime(timeLeft)}
+                                    </div>
+                                </div>
+
+                                {!gameStarted && !gameOver ? (
+                                    <button
+                                        onClick={startGame}
+                                        className="w-full bg-gradient-to-r from-orange-500 to-orange-700 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                                    >
+                                        🚀 開始遊戲
+                                    </button>
+                                ) : gameOver ? (
+                                    <div className="space-y-4">
+                                        <div className="text-4xl font-black text-orange-700">
+                                            {score >= targetScore ? '🎉 恭喜過關！' : '😅 時間結束！'}
+                                        </div>
+                                        <div className="text-xl font-bold text-gray-700 bg-gray-100 rounded-full px-4 py-2">
+                                            最終分數: {score}
+                                        </div>
+                                        {score < targetScore && (
+                                            <div className="text-lg font-bold text-red-600 bg-red-100 rounded-full px-4 py-2">
+                                                未達到 {targetScore} 分，沒有獲得獎勵哦！
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={startGame}
+                                            className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                                        >
+                                            🔄 再玩一次
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="candy-grid">
+                                        {grid.map((row, rIdx) =>
+                                            row.map((candyData, cIdx) => (
+                                                <div
+                                                    key={`${rIdx}-${cIdx}`}
+                                                    className={`candy-tile ${selectedCandy?.r === rIdx && selectedCandy?.c === cIdx ? 'selected' : ''} ${candyData.status === 'clearing' ? 'clearing' : ''} ${candyData.status === 'falling' ? 'falling' : ''}`}
+                                                    onClick={() => handleCandyClick(rIdx, cIdx)}
+                                                >
+                                                    <span className="candy-content">{candyData.emoji}</span>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage('home')}
+                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                            >
+                                🏠 回到首頁
+                            </button>
+                        </div>
+                    </div>
+                );
             };
 
-            // 首頁組件
+
+            // 抽卡機制
+            const addPoints = () => {
+                setCurrentPoints(p => p + 10);
+                setGameState('ready');
+                setDrawResult(null); // 重置抽卡結果
+                console.log('+10點，重置為ready');
+            };
+
+            const drawCard = () => {
+                if (currentPoints < 5 || gameState !== 'ready') return;
+                setCurrentPoints(p => p - 5);
+                setGameState('drawing');
+                setDrawResult(null); // 清空上次的抽卡結果
+                console.log('開始抽卡，狀態->drawing');
+                
+                setTimeout(() => {
+                    const randomNumber = Math.random() * 100; // 0-99.99
+                    let resultType;
+                    let resultImageUrls;
+
+                    if (randomNumber < 1) { // 1% 機率
+                        resultType = 'legendary';
+                        resultImageUrls = cardImages.legendary;
+                    } else if (randomNumber < 1 + 15) { // 15% 機率
+                        resultType = 'rare';
+                        resultImageUrls = cardImages.rare;
+                    } else { // 84% 機率
+                        resultType = 'normal';
+                        resultImageUrls = cardImages.normal;
+                    }
+
+                    // 從對應稀有度的圖片列表中隨機選擇一張
+                    const randomImageUrl = resultImageUrls[Math.floor(Math.random() * resultImageUrls.length)];
+
+                    setDrawResult({ type: resultType, url: randomImageUrl });
+                    setGameState('result');
+                    console.log('計時器執行，狀態->result, 抽到:', resultType);
+                }, 2000);
+            };
+
+            const resetGame = () => {
+                setGameState('ready');
+                setDrawResult(null); // 重置抽卡結果
+                console.log('重置，狀態->ready');
+            };
+
+            // 首頁
             const HomePage = () => (
-                <div className="min-h-screen bg-gradient-to-br from-blue-400 to-purple-500 flex flex-col items-center justify-center p-4 text-white">
-                    <h1 className="text-5xl font-black mb-6 text-yellow-300 drop-shadow-lg animate-bounce">
-                        🌟 生日驚喜遊戲 🌟
-                    </h1>
-                    <p className="text-xl mb-8 text-center px-4 max-w-md">
-                        歡迎進入這個充滿驚喜的遊戲世界！完成每個挑戰，累積你的驚喜點數！
-                    </p>
-                    <div className="w-full max-w-md bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl p-6 shadow-2xl border-4 border-white transform hover:scale-105 transition duration-300 ease-in-out">
-                        <h2 className="text-3xl font-bold mb-6 text-center text-yellow-200">你的點數：{currentPoints} 點</h2>
+                <div className="min-h-screen bg-gradient-to-br from-cyan-300 via-purple-400 to-pink-400 p-4 no-zoom">
+                    <div className="max-w-sm mx-auto">
+                        <div className="text-center mb-6">
+                            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border-4 border-white">
+                                <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-pink-500 mb-2">
+                                    Special GAME
+                                </h1>
+                                <p className="text-purple-700 font-semibold text-sm">完成遊戲獲得點數，集滿5點抽驚喜卡片！</p>
+                                <div className="flex justify-center space-x-2 mt-3">
+                                    <span className="text-2xl">💖</span>
+                                    <span className="text-2xl">🌈</span>
+                                    <span className="text-2xl">✨</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 控制按鈕 */}
+                        <div className="fixed top-4 left-4 space-y-2">
+                            <button onClick={addPoints} className="bg-red-600 text-white px-4 py-2 rounded font-bold">
+                                +10點
+                            </button>
+                            <button onClick={resetGame} className="bg-gray-600 text-white px-4 py-2 rounded font-bold">
+                                重置
+                            </button>
+                        </div>
+
+                        {/* 點數顯示 */}
+                        <div className="mb-6 bg-gradient-to-r from-yellow-300 to-orange-300 border-4 border-white shadow-xl rounded-2xl p-6 text-center">
+                            <div className="text-2xl font-black text-white mb-2 drop-shadow-lg">
+                                ⭐ 點數: {currentPoints} ⭐
+                            </div>
+                            <div className="text-base font-bold text-purple-800 bg-white/80 rounded-full px-4 py-1">
+                                {Math.floor(currentPoints / 5)} 次抽卡機會 🎴
+                            </div>
+                        </div>
+
+                        {/* 抽卡區域 (完全參考第一包機制) */}
+                        <div className="bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 border-4 border-white rounded-2xl p-6 mb-6">
+                            <h3 className="font-black text-xl mb-4 text-white text-center">🎁 驚喜卡片 🎁</h3>
+                            
+                            <div className="text-center">
+                                {/* READY 狀態 */}
+                                {gameState === 'ready' && (
+                                    <div>
+                                        {currentPoints >= 5 ? (
+                                            <button
+                                                onClick={drawCard}
+                                                className="w-full bg-cyan-500 text-white px-6 py-4 rounded-full text-lg font-black hover:bg-cyan-600"
+                                            >
+                                                🎴 抽卡片！(-5點) ✨
+                                            </button>
+                                        ) : (
+                                            <div className="bg-white/90 rounded-full px-4 py-3">
+                                                <p className="text-purple-700 font-bold">還需要 {5 - currentPoints} 點才能抽卡 ✨</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* DRAWING 狀態 */}
+                                {gameState === 'drawing' && (
+                                    <div className="space-y-4">
+                                        <div className="text-6xl animate-spin">🎴</div>
+                                        <div className="text-white font-bold text-xl animate-pulse">抽卡中...</div>
+                                    </div>
+                                )}
+
+                                {/* RESULT 狀態 */}
+                                {gameState === 'result' && drawResult && (
+                                    <div className="space-y-4">
+                                        <div className={`p-6 rounded-3xl border-4 border-white ${
+                                            drawResult.type === 'legendary' ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' :
+                                            drawResult.type === 'rare' ? 'bg-gradient-to-r from-blue-400 to-purple-500' :
+                                            'bg-gradient-to-r from-gray-300 to-gray-500'
+                                        }`}>
+                                            <div className="text-lg mb-3 font-bold text-white">
+                                                {drawResult.type === 'legendary' && '🌟 傳說級卡片 🌟'}
+                                                {drawResult.type === 'rare' && '💎 稀有級卡片 💎'}
+                                                {drawResult.type === 'normal' && '⭐ 普通級卡片 ⭐'}
+                                            </div>
+                                            <img src={drawResult.url} alt={drawResult.type} className="card-image"/>
+                                            <div className="text-white text-lg font-bold">
+                                                {/* 您可以在這裡添加更多關於圖片的資訊 */}
+                                                {/* 例如: {drawResult.type === 'legendary' ? '恭喜獲得特別照片！' : ''} */}
+                                            </div>
+                                        </div>
+                                        
+                                        <button
+                                            onClick={resetGame}
+                                            className="w-full bg-purple-500 text-white px-6 py-3 rounded-full font-bold hover:bg-purple-600"
+                                        >
+                                            繼續遊戲 💫
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 遊戲列表 */}
                         <div className="space-y-4">
-                            {games.map(game => (
-                                <button
-                                    key={game.id}
-                                    onClick={() => navigateTo(game.page)}
-                                    disabled={completedGames[game.id]}
-                                    className={`w-full text-lg font-bold py-4 px-6 rounded-xl shadow-lg transform transition duration-200 ease-in-out mobile-button
-                                        ${completedGames[game.id]
-                                            ? 'bg-gray-500 bg-opacity-70 text-gray-200 cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white hover:scale-102'
-                                        }`}
-                                >
-                                    {completedGames[game.id] ? `✅ ${game.name} (已完成)` : `${game.name} - 🎁 ${game.points} 點`}
-                                    <p className="text-sm font-normal mt-1 opacity-80">{game.description}</p>
-                                </button>
-                            ))}
+                            {games.map((game, index) => {
+                                const gradients = [
+                                    'from-pink-400 to-rose-400',
+                                    'from-cyan-400 to-blue-400', 
+                                    'from-green-400 to-emerald-400', 
+                                    'from-purple-400 to-violet-400' 
+                                ];
+                                return (
+                                    <div key={game.id} className={`bg-gradient-to-r ${gradients[index]} border-4 border-white shadow-xl rounded-2xl`}>
+                                        <div className="p-4">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex-1">
+                                                    <h3 className="font-black text-lg text-white drop-shadow-lg">
+                                                        {game.emoji} {game.name}
+                                                    </h3>
+                                                    <p className="text-sm text-white/90 font-semibold">
+                                                        {game.difficulty} | {game.points}點 ⭐
+                                                    </p>
+                                                    {gameResults[game.id] && (
+                                                        <p className="text-sm text-yellow-200 font-bold">
+                                                            🎉 完成 {gameResults[game.id]} 次
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    onClick={() => setCurrentPage(game.id)}
+                                                    className="mobile-button bg-white text-purple-700 px-4 py-2 rounded-full font-black hover:bg-yellow-300 transition-all shadow-lg text-sm"
+                                                >
+                                                    START! 💫
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
             );
-
-            // 猜數字遊戲組件 (這裡的程式碼是基於您原始的版本，應該是好的)
+            // 猜數字遊戲 (不變動)
             const GuessNumberGame = () => {
-                const [targetNumber] = useState(Math.floor(Math.random() * 100) + 1);
+                const [targetNumber, setTargetNumber] = useState('');
                 const [guess, setGuess] = useState('');
-                const [message, setMessage] = useState('猜一個 1 到 100 的數字！');
+                const [history, setHistory] = useState([]);
                 const [attempts, setAttempts] = useState(0);
-                const [isCorrect, setIsCorrect] = useState(false);
-                const inputRef = useRef(null);
-
-                const handleGuess = () => {
-                    const numGuess = parseInt(guess);
-                    if (isNaN(numGuess) || numGuess < 1 || numGuess > 100) {
-                        setMessage('請輸入 1 到 100 之間的有效數字！');
+                const [gameOver, setGameOver] = useState(false);
+                useEffect(() => {
+                    const digits = [];
+                    while (digits.length < 3) {
+                        const digit = Math.floor(Math.random() * 10).toString();
+                        if (!digits.includes(digit)) {
+                            digits.push(digit);
+                        }
+                    }
+                    setTargetNumber(digits.join(''));
+                }, []);
+                const checkGuess = () => {
+                    if (guess.length !== 3 || new Set(guess).size !== 3) {
+                        alert('請輸入3位不重複數字！');
                         return;
                     }
-                    setAttempts(prev => prev + 1);
 
-                    if (numGuess === targetNumber) {
-                        setMessage(`恭喜你！猜對了！你用了 ${attempts + 1} 次！`);
-                        setIsCorrect(true);
-                        handleGameComplete('guess-number', games.find(g => g.id === 'guess-number').points);
-                        // 移除 navigateTo('success-number'); 讓用戶停留在成功畫面
-                    } else if (numGuess < targetNumber) {
-                        setMessage('太低了！再高一點！');
-                    } else {
-                        setMessage('太高了！再低一點！');
-                    }
-                    setGuess('');
-                    inputRef.current.focus();
-                };
-
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-green-400 to-teal-500 flex flex-col items-center justify-center p-4 text-white">
-                        <h2 className="text-4xl font-bold mb-6 text-yellow-300 drop-shadow-lg">猜數字遊戲</h2>
-                        <div className="w-full max-w-md bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl p-6 shadow-2xl border-4 border-white">
-                            <p className="text-xl mb-6 text-center">{message}</p>
-                            {!isCorrect && (
-                                <div className="flex flex-col items-center space-y-4">
-                                    <input
-                                        type="number"
-                                        value={guess}
-                                        onChange={(e) => setGuess(e.target.value)}
-                                        onKeyPress={(e) => { if (e.key === 'Enter') handleGuess(); }}
-                                        className="w-full p-3 text-2xl text-center text-gray-800 bg-white rounded-lg border-2 border-blue-300 focus:outline-none focus:ring-4 focus:ring-blue-400"
-                                        ref={inputRef}
-                                        autoFocus
-                                    />
-                                    <button
-                                        onClick={handleGuess}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md mobile-button"
-                                    >
-                                        猜！
-                                    </button>
-                                </div>
-                            )}
-                            {isCorrect && (
-                                <button
-                                    onClick={() => navigateTo('success-number')}
-                                    className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
-                                >
-                                    查看獎勵！
-                                </button>
-                            )}
-                            <button
-                                onClick={goBack}
-                                className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
-                            >
-                                🏠 回到主畫面
-                            </button>
-                        </div>
-                    </div>
-                );
-            };
-
-            // 記憶翻牌遊戲組件 (這裡的程式碼是基於您原始的版本，應該是好的)
-            const MemoryCardGame = () => {
-                const initialCards = [
-                    '😀', '😂', '😍', '🥳', '😎', '🤩', '🤖', '👾',
-                    '😀', '😂', '😍', '🥳', '😎', '🤩', '🤖', '👾'
-                ].sort(() => Math.random() - 0.5);
-
-                const [cards, setCards] = useState(initialCards.map((emoji, index) => ({
-                    id: index,
-                    emoji,
-                    isFlipped: false,
-                    isMatched: false
-                })));
-                const [flippedCards, setFlippedCards] = useState([]);
-                const [matches, setMatches] = useState(0);
-                const [moves, setMoves] = useState(0);
-                const [gameWon, setGameWon] = useState(false);
-                const [lockBoard, setLockBoard] = useState(false);
-
-                useEffect(() => {
-                    if (flippedCards.length === 2) {
-                        setLockBoard(true);
-                        const [card1, card2] = flippedCards;
-                        if (cards[card1.id].emoji === cards[card2.id].emoji) {
-                            setMatches(prev => prev + 1);
-                            setCards(prevCards =>
-                                prevCards.map(card =>
-                                    card.id === card1.id || card.id === card2.id
-                                        ? { ...card, isMatched: true }
-                                        : card
-                                )
-                            );
-                            setFlippedCards([]);
-                            setLockBoard(false);
-                        } else {
-                            setTimeout(() => {
-                                setCards(prevCards =>
-                                    prevCards.map(card =>
-                                        card.id === card1.id || card.id === card2.id
-                                            ? { ...card, isFlipped: false }
-                                            : card
-                                    )
-                                );
-                                setFlippedCards([]);
-                                setLockBoard(false);
-                            }, 1000);
+                    let a = 0, b = 0;
+                    for (let i = 0; i < 3; i++) {
+                        if (guess[i] === targetNumber[i]) {
+                            a++;
+                        } else if (targetNumber.includes(guess[i])) {
+                            b++;
                         }
                     }
-                }, [flippedCards, cards]);
 
-                useEffect(() => {
-                    if (matches === initialCards.length / 2) {
-                        setGameWon(true);
-                        handleGameComplete('memory-card', games.find(g => g.id === 'memory-card').points);
-                        // 移除 navigateTo('success-memory'); 讓用戶停留在成功畫面
+                    const result = `${guess} - ${a}A${b}B`;
+                    setHistory([result, ...history]);
+                    setAttempts(attempts + 1);
+
+                    if (a === 3) {
+                        completeGame('guess-number', 2); // 更新點數為2
+                        setCurrentPage('success-number');
+                        return;
+                    } else if (attempts + 1 >= 10) {
+                        setGameOver(true);
                     }
-                }, [matches]);
 
-                const handleCardClick = (clickedCard) => {
-                    if (lockBoard || clickedCard.isFlipped || clickedCard.isMatched) return;
-
-                    setMoves(prev => prev + 1);
-                    setCards(prevCards =>
-                        prevCards.map(card =>
-                            card.id === clickedCard.id ? { ...card, isFlipped: true } : card
-                        )
-                    );
-                    setFlippedCards(prev => [...prev, clickedCard]);
+                    setGuess('');
                 };
 
-                const resetGame = () => {
-                    const shuffledCards = initialCards.map((emoji, index) => ({
-                        id: index,
-                        emoji,
-                        isFlipped: false,
-                        isMatched: false
-                    })).sort(() => Math.random() - 0.5);
-                    setCards(shuffledCards);
-                    setFlippedCards([]);
-                    setMatches(0);
-                    setMoves(0);
-                    setGameWon(false);
-                    setLockBoard(false);
+                const resetNumberGame = () => {
+                    setGameOver(false);
+                    setHistory([]);
+                    setGuess('');
+                    setAttempts(0);
+                    const digits = [];
+                    while (digits.length < 3) {
+                        const digit = Math.floor(Math.random() * 10).toString();
+                        if (!digits.includes(digit)) {
+                            digits.push(digit);
+                        }
+                    }
+                    setTargetNumber(digits.join(''));
                 };
 
                 return (
-                    <div className="min-h-screen bg-gradient-to-br from-pink-400 to-red-500 flex flex-col items-center justify-center p-4 text-white">
-                        <h2 className="text-4xl font-bold mb-6 text-yellow-300 drop-shadow-lg">記憶翻牌遊戲</h2>
-                        <div className="w-full max-w-lg bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl p-6 shadow-2xl border-4 border-white text-center">
-                            <p className="text-xl mb-4">步數: {moves}</p>
-                            {!gameWon && (
-                                <div className="grid grid-cols-4 gap-3 mb-6">
-                                    {cards.map(card => (
-                                        <div
-                                            key={card.id}
-                                            onClick={() => handleCardClick(card)}
-                                            className={`w-full h-24 sm:h-32 bg-gray-700 bg-opacity-60 rounded-lg flex items-center justify-center text-5xl cursor-pointer transform transition duration-300 mobile-button
-                                                ${card.isFlipped || card.isMatched ? 'bg-blue-300 text-gray-900' : 'hover:scale-105'}`}
-                                            style={{
-                                                perspective: '1000px', // 為了翻牌效果
-                                                transition: 'transform 0.3s'
-                                            }}
-                                        >
-                                            <div className="relative w-full h-full" style={{ transformStyle: 'preserve-3d' }}>
-                                                <div
-                                                    className={`absolute w-full h-full flex items-center justify-center rounded-lg backface-hidden ${card.isFlipped || card.isMatched ? 'rotateY-0' : 'rotateY-180'}`}
-                                                    style={{
-                                                        background: 'linear-gradient(to right bottom, #f0e68c, #ffd700)',
-                                                        transform: card.isFlipped || card.isMatched ? 'rotateY(0deg)' : 'rotateY(180deg)'
-                                                    }}
+                    <div className="min-h-screen bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 p-4 no-zoom">
+                        <div className="max-w-sm mx-auto">
+                            <div className="mb-4 bg-white/95 backdrop-blur-sm border-4 border-white shadow-xl rounded-2xl overflow-hidden">
+                                <div className="bg-gradient-to-r from-blue-400 to-purple-500 text-white p-4">
+                                    <h2 className="text-center font-black text-xl">🔢 數字遊戲</h2>
+                                    <p className="text-center text-sm text-white/90 font-semibold mt-1">
+                                        猜出3位不重複數字！A=位置和數字都對，B=數字對但位置錯 ✨
+                                    </p>
+                                    <p className="text-center text-xs text-white/80 mt-1">
+                                        剩餘機會: {10 - attempts} 次
+                                    </p>
+                                </div>
+                                <div className="p-6">
+                                    {!gameOver ? (
+                                        <div className="space-y-4">
+                                            <div className="space-y-3">
+                                                <input
+                                                    type="tel"
+                                                    value={guess}
+                                                    onChange={(e) => setGuess(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                                                    placeholder="輸入3位數字"
+                                                    className="w-full p-4 border-4 border-purple-300 rounded-full text-center text-xl font-bold focus:border-pink-400 focus:outline-none bg-white text-gray-800"
+                                                    maxLength={3}
+                                                />
+                                                <button
+                                                    onClick={checkGuess}
+                                                    className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-2 border-white"
                                                 >
-                                                    {card.isFlipped || card.isMatched ? card.emoji : ''}
-                                                </div>
-                                                <div
-                                                    className={`absolute w-full h-full flex items-center justify-center rounded-lg backface-hidden ${card.isFlipped || card.isMatched ? 'rotateY-180' : 'rotateY-0'}`}
-                                                    style={{
-                                                        background: 'linear-gradient(to right bottom, #87ceeb, #00bfff)',
-                                                        transform: card.isFlipped || card.isMatched ? 'rotateY(180deg)' : 'rotateY(0deg)'
-                                                    }}
-                                                >
-                                                </div>
+                                                    猜測! 💫
+                                                </button>
+                                            </div>
+                                            
+                                            <div className="max-h-48 overflow-y-auto space-y-2">
+                                                {history.map((result, index) => (
+                                                    <div key={index} className="p-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full text-center font-bold text-purple-700 border-2 border-purple-200">
+                                                        {result}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-                                    ))}
+                                    ) : (
+                                        <div className="text-center space-y-4">
+                                            <div className="text-4xl animate-pulse">😅 遊戲結束</div>
+                                            <div className="text-lg font-bold text-purple-700 bg-purple-100 rounded-full px-4 py-2">
+                                                答案是: {targetNumber}
+                                            </div>
+                                            <div className="text-xl font-black text-red-600 bg-red-100 rounded-full px-6 py-3">❌ 遊戲失敗！未獲得點數</div>
+                                            <button
+                                                onClick={resetNumberGame}
+                                                className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white"
+                                            >
+                                                再挑戰一次! 💪
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                            {gameWon && (
-                                <button
-                                    onClick={() => navigateTo('success-memory')}
-                                    className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
-                                >
-                                    查看獎勵！
-                                </button>
-                            )}
-                            <button
-                                onClick={goBack}
-                                className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
-                            >
-                                🏠 回到主畫面
-                            </button>
-                        </div>
-                    </div>
-                );
-            };
-
-            // 滑動拼圖遊戲組件 (這裡保留了您之前提供且能運行的部分，並加入圖片載入判斷)
-            const JigsawPuzzleGame = () => {
-                const [pieces, setPieces] = useState([]);
-                const [originalImageSize, setOriginalImageSize] = useState({ width: 0, height: 0 });
-                const [displayImageSize, setDisplayImageSize] = useState({ width: 0, height: 0 });
-                const [selectedPiece, setSelectedPiece] = useState(null); // 當前選中的拼圖塊
-                const [emptySpot, setEmptySpot] = useState(null); // 空白格的位置
-                const [isPuzzleActive, setIsPuzzleActive] = useState(false); // 拼圖是否可以互動
-                const [isLoading, setIsLoading] = useState(true); // 圖片是否正在載入
-                const [message, setMessage] = useState("載入圖片中...");
-
-                const imageUrl = 'https://Avis0930.github.io/my-surprise-game/demo.jpg'; // 確保這是您要用的圖片路徑
-                const rows = 3;
-                const cols = 3;
-
-                useEffect(() => {
-                    setIsLoading(true);
-                    setMessage("載入圖片中...");
-                    const img = new Image();
-                    img.src = imageUrl;
-
-                    img.onload = () => {
-                        // 檢查圖片是否確實有寬高
-                        if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-                            console.error("圖片載入失敗或尺寸為零。請檢查圖片文件。", imageUrl);
-                            setMessage("圖片載入失敗或尺寸異常。");
-                            setIsLoading(false);
-                            return;
-                        }
-
-                        // 計算拼圖顯示的尺寸，使其適應螢幕大小
-                        const scaleFactor = Math.min(
-                            (window.innerWidth * 0.8) / img.naturalWidth,
-                            (window.innerHeight * 0.7) / img.naturalHeight
-                        );
-                        const displayWidth = img.naturalWidth * scaleFactor;
-                        const displayHeight = img.naturalHeight * scaleFactor;
-
-                        let initialPieces = [];
-                        for (let i = 0; i < rows * cols; i++) {
-                            initialPieces.push({
-                                id: i,
-                                correctPos: i,
-                                currentPos: i,
-                                // 計算每個拼圖塊在顯示尺寸下的位置
-                                x: (i % cols) * (displayWidth / cols),
-                                y: Math.floor(i / cols) * (displayHeight / rows),
-                            });
-                        }
-
-                        // 為滑動拼圖移除最後一塊作為空白格
-                        const lastPieceId = rows * cols - 1;
-                        const initialEmptySpot = { ...initialPieces[lastPieceId] }; // 複製最後一塊的位置
-                        setEmptySpot(initialEmptySpot); // 設定空白格的初始位置
-
-                        // 從拼圖塊中移除最後一塊
-                        const actualPieces = initialPieces.slice(0, lastPieceId);
-
-                        // 隨機打亂拼圖
-                        const shuffledPieces = shuffleArray(actualPieces);
-                        // 更新打亂後拼圖塊的 currentPos
-                        setPieces(shuffledPieces.map((piece, index) => ({
-                            ...piece,
-                            currentPos: index < lastPieceId ? shuffledPieces[index].correctPos : lastPieceId // 保持正確的位置
-                        })));
-                        
-                        setOriginalImageSize({ width: img.naturalWidth, height: img.naturalHeight });
-                        setDisplayImageSize({ width: displayWidth, height: displayHeight });
-                        setIsLoading(false); // 載入完成，顯示拼圖
-                        setIsPuzzleActive(true); // 啟動拼圖互動
-                        setMessage("點擊拼圖塊開始遊戲！"); // 載入成功訊息
-                    };
-
-                    img.onerror = () => {
-                        console.error("圖片載入失敗，請檢查圖片路徑或文件是否損壞。", imageUrl);
-                        setMessage("圖片載入失敗，請檢查圖片路徑或文件。");
-                        setIsLoading(false);
-                    };
-                }, [imageUrl, rows, cols]); // 確保在 imageUrl, rows, cols 改變時重新執行
-
-                // 隨機打亂陣列的工具函數
-                const shuffleArray = (array) => {
-                    const newArray = [...array];
-                    for (let i = newArray.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-                    }
-                    return newArray;
-                };
-
-                // 判斷拼圖是否完成
-                const isSolved = () => {
-                    if (pieces.length === 0) return false;
-                    // 對於滑動拼圖，檢查除了空白格以外的所有拼圖塊是否都在正確的位置
-                    return pieces.every(piece => piece.currentPos === piece.id);
-                };
-
-                // 處理拼圖塊點擊事件
-                const handlePieceClick = (clickedPiece) => {
-                    if (!isPuzzleActive) return; // 拼圖未啟動，不響應點擊
-
-                    const canMove = (piece, empty) => {
-                        const pieceRow = Math.floor(piece.currentPos / cols);
-                        const pieceCol = piece.currentPos % cols;
-                        const emptyRow = Math.floor(empty.currentPos / cols);
-                        const emptyCol = empty.currentPos % cols;
-
-                        // 判斷是否在同一行或同一列，且相鄰
-                        const isAdjacentRow = pieceRow === emptyRow && Math.abs(pieceCol - emptyCol) === 1;
-                        const isAdjacentCol = pieceCol === emptyCol && Math.abs(pieceRow - emptyRow) === 1;
-
-                        return isAdjacentRow || isAdjacentCol;
-                    };
-
-                    if (canMove(clickedPiece, emptySpot)) {
-                        setPieces(prevPieces => {
-                            const newPieces = prevPieces.map(p =>
-                                p.id === clickedPiece.id ? { ...p, currentPos: emptySpot.currentPos } : p
-                            );
-                            return newPieces;
-                        });
-                        // 移動空白格到被點擊的拼圖塊的原始位置
-                        setEmptySpot({ ...emptySpot, currentPos: clickedPiece.currentPos });
-                    }
-                };
-
-                useEffect(() => {
-                    if (!isLoading && isSolved()) {
-                        setMessage("恭喜你！拼圖完成了！");
-                        setIsPuzzleActive(false); // 停止互動
-                        handleGameComplete('jigsaw-puzzle', games.find(g => g.id === 'jigsaw-puzzle').points);
-                        // 這裡可以導向成功頁面
-                        navigateTo('success-puzzle');
-                    }
-                }, [pieces, isLoading]); // 監聽 pieces 和 isLoading 的變化
-
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 flex flex-col items-center justify-center p-4 text-white no-zoom">
-                        <h2 className="text-4xl font-bold mb-6 text-yellow-300 drop-shadow-lg">滑動拼圖遊戲</h2>
-                        <div className="w-full max-w-lg bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl p-6 shadow-2xl border-4 border-white text-center flex flex-col items-center">
-                            <p className="text-xl mb-4">{message}</p>
-                            {isLoading ? (
-                                <div className="text-2xl">載入中...</div>
-                            ) : (
-                                <div
-                                    className="relative border-4 border-yellow-300 rounded-lg overflow-hidden shadow-xl"
-                                    style={{
-                                        width: displayImageSize.width,
-                                        height: displayImageSize.height,
-                                        aspectRatio: `${displayImageSize.width} / ${displayImageSize.height}`
-                                    }}
-                                >
-                                    {pieces.map(piece => (
-                                        <div
-                                            key={piece.id}
-                                            className={`absolute cursor-pointer puzzle-piece transform ${isPuzzleActive ? 'hover:scale-105' : ''}`}
-                                            onClick={() => handlePieceClick(piece)}
-                                            style={{
-                                                width: displayImageSize.width / cols,
-                                                height: displayImageSize.height / rows,
-                                                backgroundImage: `url(${imageUrl})`,
-                                                backgroundSize: `${displayImageSize.width}px ${displayImageSize.height}px`,
-                                                backgroundPosition: `-${piece.x}px -${piece.y}px`,
-                                                left: (piece.currentPos % cols) * (displayImageSize.width / cols),
-                                                top: Math.floor(piece.currentPos / cols) * (displayImageSize.height / rows),
-                                                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.3)' // 拼圖塊之間的邊界
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                            <button
-                                onClick={goBack}
-                                className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
-                            >
-                                🏠 回到主畫面
-                            </button>
-                        </div>
-                    </div>
-                );
-            };
-
-            // 抽卡遊戲組件 (這裡只提供框架，如果原始有完整邏輯，請替換)
-            const GachaGame = () => {
-                const [result, setResult] = useState(null);
-                const [message, setMessage] = useState("點擊按鈕，試試你的手氣！");
-                const [isSpinning, setIsSpinning] = useState(false);
-
-                const rewards = [
-                    { name: '謝謝參與', type: 'text', weight: 40 },
-                    { name: '10點驚喜點數', type: 'points', value: 10, weight: 30 },
-                    { name: '特別禮物 A', type: 'item', weight: 20 },
-                    { name: '神秘大獎！', type: 'item', weight: 10 }
-                ];
-
-                const weightedRandom = (items) => {
-                    let i,
-                        weights = [];
-                    for (i = 0; i < items.length; i++)
-                        weights[i] = items[i].weight + (weights[i - 1] || 0);
-                    
-                    let random = Math.random() * weights[weights.length - 1];
-                    for (i = 0; i < weights.length; i++)
-                        if (weights[i] > random)
-                            break;
-                    return items[i];
-                };
-
-                const handleSpin = () => {
-                    if (isSpinning) return;
-                    setIsSpinning(true);
-                    setResult(null);
-                    setMessage("轉動中...祝你好運！");
-
-                    setTimeout(() => {
-                        const chosenReward = weightedRandom(rewards);
-                        setResult(chosenReward);
-                        setMessage(`恭喜你抽到了：${chosenReward.name}！`);
-                        setIsSpinning(false);
-
-                        // 判斷是否為點數獎勵並增加點數
-                        if (chosenReward.type === 'points') {
-                            setCurrentPoints(prevPoints => prevPoints + chosenReward.value);
-                        }
-                        // 如果是遊戲完成並給點數，則像其他遊戲一樣處理
-                        // handleGameComplete('gacha-game', games.find(g => g.id === 'gacha-game').points); // 抽卡通常是每次都能抽，而不是完成遊戲
-                    }, 2000);
-                };
-
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-blue-700 flex flex-col items-center justify-center p-4 text-white">
-                        <h2 className="text-4xl font-bold mb-6 text-yellow-300 drop-shadow-lg">幸運抽卡遊戲</h2>
-                        <div className="w-full max-w-md bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl p-6 shadow-2xl border-4 border-white text-center">
-                            <p className="text-xl mb-6">{message}</p>
-                            <div className="mb-6 h-24 flex items-center justify-center text-4xl font-bold text-yellow-200">
-                                {result ? result.name : (isSpinning ? '...' : '等待抽獎')}
                             </div>
+
                             <button
-                                onClick={handleSpin}
-                                disabled={isSpinning}
-                                className={`w-full py-4 px-6 rounded-xl shadow-lg transform transition duration-300 mobile-button font-bold text-white
-                                    ${isSpinning ? 'bg-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 hover:scale-105'}`}
+                                onClick={() => setCurrentPage('home')}
+                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white"
                             >
-                                {isSpinning ? '轉動中...' : '立即抽卡！'}
-                            </button>
-                            <button
-                                onClick={goBack}
-                                className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg font-bold shadow-md mobile-button"
-                            >
-                                🏠 回到主畫面
+                                回到首頁 🏠
                             </button>
                         </div>
                     </div>
                 );
             };
 
+            // 翻牌連連看遊戲 (不變動)
+            const MemoryCardGame = () => {
+                const [cards, setCards] = useState([]);
+                const [flippedCards, setFlippedCards] = useState([]);
+                const [matchedCards, setMatchedCards] = useState([]);
+                const [gameOver, setGameOver] = useState(false);
+                const [timeLeft, setTimeLeft] = useState(60);
+                const [timerActive, setTimerActive] = useState(false);
+
+                const emojis = ['💖', '🌈', '✨', '🌟', '💫', '🎉', '🎈', '🦄'];
+                useEffect(() => {
+                    initializeGame();
+                }, []);
+                useEffect(() => {
+                    let interval = null;
+                    if (timerActive && timeLeft > 0 && !gameOver) {
+                        interval = setInterval(() => {
+                            setTimeLeft(timeLeft => {
+                                if (timeLeft <= 1) {
+                                    setGameOver(true);
+                                    setTimerActive(false);
+                                    return 0;
+                                }
+                                return timeLeft - 1;
+                            });
+                        }, 1000);
+                    }
+                    return () => clearInterval(interval);
+                }, [timerActive, timeLeft, gameOver]);
+                const initializeGame = () => {
+                    const gameCards = [...emojis, ...emojis].map((emoji, index) => ({
+                        id: index,
+                        emoji
+                    }));
+                    
+                    for (let i = gameCards.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [gameCards[i], gameCards[j]] = [gameCards[j], gameCards[i]];
+                    }
+                    
+                    setCards(gameCards);
+                    setFlippedCards([]);
+                    setMatchedCards([]);
+                    setGameOver(false);
+                    setTimeLeft(60);
+                    setTimerActive(true);
+                };
+
+                const flipCard = (cardId) => {
+                    if (gameOver || flippedCards.length === 2 || flippedCards.includes(cardId) || matchedCards.includes(cardId)) {
+                        return;
+                    }
+
+                    const newFlipped = [...flippedCards, cardId];
+                    setFlippedCards(newFlipped);
+
+                    if (newFlipped.length === 2) {
+                        const [first, second] = newFlipped;
+                        const firstCard = cards.find(c => c.id === first);
+                        const secondCard = cards.find(c => c.id === second);
+                        if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
+                            const newMatched = [...matchedCards, first, second];
+                            setMatchedCards(newMatched);
+                            
+                            if (newMatched.length === cards.length) {
+                                completeGame('memory-card', 3); // 更新點數為3
+                                setTimerActive(false);
+                                setCurrentPage('success-memory');
+                                return;
+                            }
+                        }
+
+                        setTimeout(() => setFlippedCards([]), 1000);
+                    }
+                };
+                const formatTime = (seconds) => {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return `${mins}:${secs.toString().padStart(2, '0')}`;
+                };
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-cyan-400 p-4 no-zoom">
+                        <div className="max-w-sm mx-auto">
+                            <div className="mb-4 bg-white/95 backdrop-blur-sm border-4 border-white shadow-xl rounded-2xl overflow-hidden">
+                                <div className="bg-gradient-to-r from-pink-400 to-purple-500 text-white p-4">
+                                    <h2 className="text-center font-black text-xl">🎴 記憶遊戲</h2>
+                                    <p className="text-center text-sm text-white/90 font-semibold mt-1">
+                                        翻開相同的卡片進行配對！✨
+                                    </p>
+                                    <div className="text-center mt-2">
+                                        <span className={`text-lg font-black ${timeLeft <= 10 ? 'text-red-200 animate-pulse' : 'text-white'}`}>
+                                            ⏰ {formatTime(timeLeft)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    {!gameOver && matchedCards.length < cards.length ? (
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {cards.map((card) => (
+                                                <button
+                                                    key={card.id}
+                                                    onClick={() => flipCard(card.id)}
+                                                    className={`aspect-square text-2xl rounded-xl transition-all duration-300 border-2 border-white shadow-lg ${
+                                                        flippedCards.includes(card.id) || matchedCards.includes(card.id)
+                                                        ? 'bg-gradient-to-r from-yellow-200 to-pink-200 shadow-xl' 
+                                                            : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
+                                                    } ${matchedCards.includes(card.id) ? 'opacity-60' : ''}`}
+                                                >
+                                                    {flippedCards.includes(card.id) || matchedCards.includes(card.id) ? card.emoji : '💫'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center space-y-4">
+                                            <div className="text-4xl animate-pulse">⏰ 時間到了</div>
+                                            <div className="text-lg font-bold text-purple-700 bg-purple-100 rounded-full px-4 py-2">
+                                                已配對: {matchedCards.length / 2} / 8 組
+                                            </div>
+                                            <div className="text-xl font-black text-red-600 bg-red-100 rounded-full px-6 py-3">❌ 遊戲失敗！未獲得點數</div>
+                                            <button
+                                                onClick={initializeGame}
+                                                className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white"
+                                            >
+                                                再挑戰一次! 💪
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage('home')}
+                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white"
+                            >
+                                回到首頁 🏠
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
 
             // 成功頁面組件
             const SuccessPage = ({ title, emoji, points, gameId }) => (
-                <div className="min-h-screen bg-gradient-to-br from-yellow-400 to-orange-500 flex flex-col items-center justify-center p-4 text-white">
-                    <h2 className="text-5xl font-black mb-6 animate-pulse">{emoji} {title} {emoji}</h2>
-                    <p className="text-2xl mb-8">你獲得了 {points} 點驚喜點數！</p>
-                    <div className="flex space-x-4">
-                        <button
-                            onClick={() => navigateTo('home')}
-                            className="bg-green-500 hover:bg-green-600 text-white px-6 py-4 rounded-lg font-bold shadow-lg mobile-button"
-                        >
-                            🎉 繼續收集點數
-                        </button>
-                        {games.some(game => !completedGames[game.id]) && (
-                            <button
-                                onClick={goBack}
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-4 rounded-lg font-bold shadow-lg mobile-button"
-                            >
-                                ↩️ 返回遊戲
-                            </button>
-                        )}
+                <div className="min-h-screen bg-gradient-to-br from-green-300 via-emerald-400 to-teal-500 p-4 flex items-center justify-center no-zoom">
+                    <div className="max-w-sm mx-auto text-center">
+                        <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-4 border-white">
+                            <div className="text-6xl mb-4 animate-bounce">{emoji}</div>
+                            <h2 className="text-3xl font-black text-green-700 mb-4">{title}</h2>
+                            <div className="space-y-3 mb-6">
+                                <div className="text-xl font-black text-green-600 bg-yellow-200 rounded-full px-6 py-3 animate-pulse">
+                                    ✅ 獲得 {points} 點數！⭐
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => setCurrentPage(gameId)}
+                                    className="mobile-button w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                                >
+                                    🎮 再玩一次
+                                </button>
+                                <button
+                                    onClick={() => setCurrentPage('home')}
+                                    className="mobile-button w-full bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                                >
+                                    🏠 回到主畫面
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             );
@@ -613,17 +1201,18 @@
                         return <GuessNumberGame />;
                     case 'memory-card':
                         return <MemoryCardGame />;
-                    case 'jigsaw-puzzle':
-                        return <JigsawPuzzleGame />;
-                    case 'gacha-game': // 抽卡遊戲頁面
-                        return <GachaGame />;
+                    case 'whack-a-mole':
+                        return <WhackAMoleGame />;
+                    case 'candy-crush': 
+                        return <CandyCrushGame />;
                     case 'success-number':
-                        return <SuccessPage title="恭喜過關！" emoji="🎉" points={3} gameId="guess-number" />;
+                        return <SuccessPage title="恭喜過關！" emoji="🎉" points={2} gameId="guess-number" />;
                     case 'success-memory':
                         return <SuccessPage title="記憶達人！" emoji="🎉" points={3} gameId="memory-card" />;
-                    case 'success-puzzle':
-                        // 修正點數為 5，與 games 列表保持一致
-                        return <SuccessPage title="拼圖大師！" emoji="🧩" points={games.find(g => g.id === 'jigsaw-puzzle').points} gameId="jigsaw-puzzle" />;
+                    case 'success-whack-a-mole':
+                        return <SuccessPage title="打地鼠高手！" emoji="🐭" points={4} gameId="whack-a-mole" />;
+                    case 'success-candy-crush': 
+                        return <SuccessPage title="糖果大師！" emoji="🍬" points={5} gameId="candy-crush" />; 
                     default:
                         return <HomePage />;
                 }
