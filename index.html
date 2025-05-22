@@ -192,7 +192,7 @@
                 { id: 'memory-card', name: '翻牌連連看', points: 3, difficulty: '中等', emoji: '🎴' },
                 { id: 'whack-a-mole', name: '打地鼠', points: 4, difficulty: '中等', emoji: '🐭' }, // 新增打地鼠
                 { id: 'candy-crush', name: '糖果消消樂', points: 2, difficulty: '簡單', emoji: '🍭' },
-                { id: 'jigsaw-puzzle', name: '拖曳拼圖', points: 5, difficulty: '困難', emoji: '🧩' },
+                // 已移除拖曳拼圖遊戲 { id: 'jigsaw-puzzle', name: '拖曳拼圖', points: 5, difficulty: '困難', emoji: '🧩' },
             ];
             const completeGame = (gameId, points) => {
                 setCurrentPoints(prev => prev + points);
@@ -495,10 +495,8 @@
                 const processMatches = async (initialGrid) => {
                     let currentGrid = JSON.parse(JSON.stringify(initialGrid));
                     let totalScoreFromThisMove = 0;
-                    // let iteration = 0; // 這個變量在這個 scope 內沒有被使用
 
                     while (true) {
-                        // iteration++; // 同上，沒有使用
                         const matches = checkMatches(currentGrid);
                         if (matches.length === 0) {
                             break; // 沒有可消除的了，結束
@@ -531,14 +529,10 @@
                         });
 
                         // 下落
-                        // const fallingCandies = []; // 這個變量在這個 scope 內沒有被使用
                         for (let c = 0; c < cols; c++) {
                             let writeRow = rows - 1;
                             for (let r = rows - 1; r >= 0; r--) {
                                 if (currentGrid[r][c].emoji !== null) {
-                                    // if (r !== writeRow) { // 這個條件判斷邏輯是正確的，但fallingCandies沒有使用
-                                    //     fallingCandies.push({ from: r, to: writeRow, col: c });
-                                    // }
                                     currentGrid[writeRow][c] = currentGrid[r][c];
                                     writeRow--;
                                 }
@@ -772,167 +766,9 @@
                 );
             };
 
-            // 拖曳拼圖遊戲
-            const JigsawPuzzleGame = () => {
-                const [puzzlePieces, setPuzzlePieces] = useState([]);
-                const [targetSlots, setTargetSlots] = useState([]);
-                const [draggedPiece, setDraggedPiece] = useState(null);
-                const [completedPieces, setCompletedPieces] = useState([]);
-                const [gameOver, setGameOver] = useState(false);
+            // 已移除拖曳拼圖遊戲
+            // const JigsawPuzzleGame = () => { /* ... (此處原拼圖遊戲代碼已被移除) ... */ };
 
-                const animals = ['🐱', '🐶', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐸'];
-                
-                useEffect(() => {
-                    initializePuzzle();
-                }, []); // 初始只執行一次
-
-                // 修正 initializePuzzle 依賴項
-                const initializePuzzle = () => {
-                    const pieces = animals.map((animal, index) => ({
-                        id: index,
-                        animal,
-                        isPlaced: false
-                    }));
-                    
-                    for (let i = pieces.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
-                    }
-                    
-                    const slots = animals.map((animal, index) => ({
-                        id: index,
-                        targetAnimal: animal,
-                        currentPiece: null
-                    }));
-                    
-                    setPuzzlePieces(pieces);
-                    setTargetSlots(slots);
-                    setCompletedPieces([]);
-                    setGameOver(false);
-                };
-
-                const handleDragStart = (piece) => {
-                    setDraggedPiece(piece);
-                };
-
-                const handleDragOver = (e) => {
-                    e.preventDefault();
-                };
-
-                // 修正 handleDrop 依賴項
-                const handleDrop = (slot) => {
-                    if (!draggedPiece) return;
-                    if (draggedPiece.animal === slot.targetAnimal) {
-                        const newPieces = puzzlePieces.map(piece => 
-                            piece.id === draggedPiece.id ? {...piece, isPlaced: true} : piece
-                        );
-                        const newSlots = targetSlots.map(targetSlot => 
-                            targetSlot.id === slot.id ? {...targetSlot, currentPiece: draggedPiece} : targetSlot
-                        );
-                        const newCompleted = [...completedPieces, draggedPiece.id];
-                        
-                        setPuzzlePieces(newPieces);
-                        setTargetSlots(newSlots);
-                        setCompletedPieces(newCompleted);
-                        
-                        if (newCompleted.length === animals.length) {
-                            setTimeout(() => {
-                                completeGame('jigsaw-puzzle', 5);
-                                setCurrentPage('success-puzzle');
-                            }, 500);
-                        }
-                    }
-                    
-                    setDraggedPiece(null);
-                };
-
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-orange-400 p-4 no-zoom">
-                        <div className="max-w-sm mx-auto">
-                            <div className="mb-4 bg-white/95 backdrop-blur-sm border-4 border-white shadow-xl rounded-2xl overflow-hidden">
-                                <div className="bg-gradient-to-r from-purple-400 to-pink-500 text-white p-4">
-                                    <h2 className="text-center font-black text-xl">🧩 拖曳拼圖</h2>
-                                    <p className="text-center text-sm text-white/90 font-semibold mt-1">
-                                        拖拽動物到正確的位置！✨
-                                    </p>
-                                    <p className="text-center text-xs text-white/80 mt-1">
-                                        完成: {completedPieces.length} / {animals.length}
-                                    </p>
-                                </div>
-                                <div className="p-4">
-                                    <div className="space-y-4">
-                                        {/* 目標拼圖區域 (3x3網格) */}
-                                        <div className="bg-gradient-to-b from-blue-100 to-purple-100 rounded-2xl p-4 border-4 border-purple-300">
-                                            <div className="text-center text-sm font-bold text-purple-700 mb-3">🎯 拼圖區域</div>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                {targetSlots.map((slot) => (
-                                                    <div
-                                                        key={slot.id}
-                                                        className={`aspect-square border-2 border-dashed rounded-lg flex items-center justify-center text-2xl transition-all ${
-                                                            slot.currentPiece 
-                                                            ? 'bg-green-200 border-green-400'
-                                                                : 'bg-white border-gray-400 hover:border-purple-400'
-                                                        }`}
-                                                        onDragOver={handleDragOver}
-                                                        onDrop={() => handleDrop(slot)}
-                                                    >
-                                                        {slot.currentPiece ? slot.currentPiece.animal : '❓'}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* 拼圖片段區域 */}
-                                        <div className="bg-gradient-to-b from-yellow-100 to-orange-100 rounded-2xl p-4 border-4 border-orange-300">
-                                            <div className="text-center text-sm font-bold text-orange-700 mb-3">🎪 拖拽這些動物</div>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                {puzzlePieces.filter(piece => !piece.isPlaced).map((piece) => (
-                                                    <div
-                                                        key={piece.id}
-                                                        className="aspect-square bg-white border-2 border-orange-300 rounded-lg flex items-center justify-center text-2xl cursor-grab active:cursor-grabbing hover:bg-yellow-50 transition-all shadow-lg"
-                                                        draggable
-                                                        onDragStart={() => handleDragStart(piece)}
-                                                        onTouchStart={() => handleDragStart(piece)}
-                                                    >
-                                                        {piece.animal}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {puzzlePieces.filter(piece => !piece.isPlaced).length === 0 && (
-                                                <div className="text-center text-green-600 font-bold text-lg mt-4">
-                                                    🎉 所有片段都已放置！
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="text-center">
-                                            <div className="text-sm text-purple-700 font-semibold mb-2">
-                                                💡 操作說明：
-                                            </div>
-                                            <div className="text-xs text-purple-600 bg-purple-50 rounded-lg p-2">
-                                                拖拽下方的動物到上方對應的位置即可完成拼圖
-                                            </div>
-                                            <button
-                                                onClick={initializePuzzle}
-                                                className="w-full mt-3 bg-gradient-to-r from-blue-400 to-purple-500 text-white px-6 py-3 rounded-full font-black shadow-lg border-2 border-white"
-                                            >
-                                                重新開始 🔄
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => setCurrentPage('home')}
-                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white"
-                            >
-                                🏠 回到首頁
-                            </button>
-                        </div>
-                    </div>
-                );
-            };
             // 抽卡機制
             const addPoints = () => {
                 setCurrentPoints(p => p + 10);
@@ -1058,11 +894,11 @@
                                         <div className={`rarity-tag ${drawResult.type}`}>
                                             {drawResult.type.toUpperCase()}
                                         </div>
-                                        {/* START: 抽卡結果文字調整 */}
+                                        {/* START: 抽卡結果文字調整 - 已移除標點符號 */}
                                         <div className={`result-text ${drawResult.type} text-center`}>
-                                            {drawResult.type === 'ssr' ? '✨ SSR 卡片！' :
-                                             drawResult.type === 'sr' ? '💎 SR 卡片！' :
-                                             '🌟 R 卡片！'}
+                                            {drawResult.type === 'ssr' ? '✨ SSR' :
+                                             drawResult.type === 'sr' ? '💎 SR' :
+                                             '🌟 R'}
                                         </div>
                                         {/* END: 抽卡結果文字調整 */}
                                         
@@ -1446,8 +1282,8 @@
                         return <WhackAMoleGame />;
                     case 'candy-crush': // 糖果消消樂
                         return <CandyCrushGame />;
-                    case 'jigsaw-puzzle':
-                        return <JigsawPuzzleGame />;
+                    // 已移除拖曳拼圖遊戲 case 'jigsaw-puzzle':
+                    // 已移除拖曳拼圖遊戲    return <JigsawPuzzleGame />;
                     case 'success-number':
                         return <SuccessPage title="恭喜過關！" emoji="🎉" points={3} gameId="guess-number" />;
                     case 'success-memory':
@@ -1456,8 +1292,8 @@
                         return <SuccessPage title="地鼠剋星！" emoji="🔨" points={4} gameId="whack-a-mole" />;
                     case 'success-candy-crush': // 糖果消消樂成功頁面
                         return <SuccessPage title="甜點大師！" emoji="🍬" points={5} gameId="candy-crush" />;
-                    case 'success-puzzle':
-                        return <SuccessPage title="拼圖大師！" emoji="🧩" points={5} gameId="jigsaw-puzzle" />;
+                    // 已移除拖曳拼圖遊戲 case 'success-puzzle':
+                    // 已移除拖曳拼圖遊戲    return <SuccessPage title="拼圖大師！" emoji="🧩" points={5} gameId="jigsaw-puzzle" />;
                     default:
                         return <HomePage />;
                 }
