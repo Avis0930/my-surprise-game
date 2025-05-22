@@ -106,15 +106,70 @@
         }
 
         /* 抽卡圖片樣式 */
+        /* 調整圖片尺寸和邊框 */
         .card-image {
             width: 100%;
-            height: 300px; /* 固定高度，避免圖片大小不一造成跳動 */
-            object-fit: cover; /* 裁剪圖片以填充容器 */
-            border-radius: 1rem; /* 圓角 */
-            border: 4px solid white; /* 白色邊框 */
-            box-shadow: 0 0 15px rgba(0,0,0,0.3); /* 陰影 */
-            margin-bottom: 1rem;
+            max-width: 280px; /* 限制最大寬度 */
+            height: auto; /* 自動高度 */
+            border-radius: 0.75rem; /* 圓角 */
+            border: 5px solid; /* 邊框 */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* 更強烈的陰影 */
+            transition: all 0.3s ease-in-out;
+            object-fit: contain; /* 確保圖片內容完整顯示 */
+            aspect-ratio: 3 / 4; /* 調整為更常見的卡片比例，例如 3:4 */
         }
+
+        /* 稀有度邊框顏色 */
+        .card-image.ssr { border-color: #FFD700; /* 金色 */ }
+        .card-image.sr { border-color: #8A2BE2; /* 紫色 */ }
+        .card-image.r { border-color: #ADD8E6; /* 淺藍色 */ }
+
+        /* 稀有度標籤樣式 */
+        .rarity-tag {
+            font-weight: bold;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px; /* 全圓角 */
+            margin-top: 1rem;
+            display: inline-block; /* 讓其佔據內容寬度 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem; /* 稍微小一點 */
+        }
+        .rarity-tag.ssr {
+            background: linear-gradient(to right, #FFD700, #FFA500); /* 金橙漸變 */
+            color: #8B4513; /* 深棕色文字 */
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+        }
+        .rarity-tag.sr {
+            background: linear-gradient(to right, #8A2BE2, #EE82EE); /* 紫粉漸變 */
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        .rarity-tag.r {
+            background: linear-gradient(to right, #ADD8E6, #87CEEB); /* 淺藍漸變 */
+            color: #333;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+        }
+
+        /* 抽卡結果文字 */
+        .result-text {
+            font-size: 1.5rem; /* 放大字體 */
+            font-weight: black;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .result-text.ssr { color: #FFEB3B; /* 亮黃色 */ }
+        .result-text.sr { color: #DA70D6; /* 紫羅蘭色 */ }
+        .result-text.r { color: #87CEFA; /* 亮天藍色 */ }
+
+
+        /* 抽卡動畫 */
+        @keyframes rotate-in {
+            0% { transform: scale(0.5) rotateY(180deg); opacity: 0; }
+            100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+        }
+        .card-enter {
+            animation: rotate-in 0.5s forwards;
+        }
+
     </style>
 </head>
 <body>
@@ -147,23 +202,36 @@
                 }));
             };
 
-            // *** START: 抽卡圖片配置 - 已更新為 jiwoo.jpg ***
+            // *** START: 抽卡圖片配置 - 已更新為 SSR, SR, R 等級與數量建議 ***
             const cardImages = {
-                legendary: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/SSR.jpg', // 替換為您的傳說級圖片1
-                    // 如果您有傳說級圖片，請放在這裡
+                ssr: [
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr3.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr4.jpg',
+                    // 如果您有更多 SSR 圖片，請在此添加
                 ],
-                rare: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/R.jpg', // **已更新為 images/jiwoo.jpg**
-                    // 'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/rare2.jpg', // 替換為您的稀有級圖片2
-                    // 'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/rare3.jpg', // 替換為您的稀有級圖片3
+                sr: [
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr1.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr2.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr3.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr4.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr5.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr6.jpg',
+                    // 如果您有更多 SR 圖片，請在此添加
                 ],
-                normal: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/normal1.jpg', // 替換為您的普通級圖片1
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/normal2.jpg', // 替換為您的普通級圖片2
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/normal3.jpg', // 替換為您的普通級圖片3
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/normal4.jpg', // 替換為您的普通級圖片4
-                    // 如果您沒有其他普通級圖片，可以先用一些佔位圖
+                r: [
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r2.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r3.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r4.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r5.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r6.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r7.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r8.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r9.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r10.jpg',
+                    // 如果您有更多 R 圖片，請在此添加
                 ]
             };
             // *** END: 抽卡圖片配置 ***
@@ -857,7 +925,7 @@
 
                             <button
                                 onClick={() => setCurrentPage('home')}
-                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
+                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white"
                             >
                                 🏠 回到首頁
                             </button>
@@ -881,18 +949,22 @@
                 setTimeout(() => {
                     // 根據抽卡結果設定 drawResult (隨機選一張圖片)
                     const rarityRoll = Math.random();
-                    let chosenCard = null;
-                    if (rarityRoll < 0.1) { // 10% 傳說
-                        chosenCard = cardImages.legendary[Math.floor(Math.random() * cardImages.legendary.length)];
-                        setDrawResult({ type: 'legendary', url: chosenCard });
-                    } else if (rarityRoll < 0.4) { // 30% 稀有 (0.1-0.4)
-                        chosenCard = cardImages.rare[Math.floor(Math.random() * cardImages.rare.length)];
-                        setDrawResult({ type: 'rare', url: chosenCard });
-                    } else { // 60% 普通
-                        chosenCard = cardImages.normal[Math.floor(Math.random() * cardImages.normal.length)];
-                        setDrawResult({ type: 'normal', url: chosenCard });
+                    let chosenCardUrl = null;
+                    let chosenType = '';
+
+                    // SSR: 20% (0.0 - 0.2), SR: 30% (0.2 - 0.5), R: 50% (0.5 - 1.0)
+                    if (rarityRoll < 0.2) { // 20% for SSR
+                        chosenType = 'ssr';
+                        chosenCardUrl = cardImages.ssr[Math.floor(Math.random() * cardImages.ssr.length)];
+                    } else if (rarityRoll < 0.5) { // 30% for SR (0.2 + 0.3 = 0.5)
+                        chosenType = 'sr';
+                        chosenCardUrl = cardImages.sr[Math.floor(Math.random() * cardImages.sr.length)];
+                    } else { // 50% for R
+                        chosenType = 'r';
+                        chosenCardUrl = cardImages.r[Math.floor(Math.random() * cardImages.r.length)];
                     }
                     
+                    setDrawResult({ type: chosenType, url: chosenCardUrl });
                     setGameState('result');
                     console.log('計時器執行，狀態->result');
                 }, 2000);
@@ -973,24 +1045,23 @@
                                     </div>
                                 )}
 
-                                {/* RESULT 狀態 */}
-                                {gameState === 'result' && (
-                                    <div className="space-y-4">
-                                        <div className={`p-6 rounded-3xl border-4 border-white ${drawResult?.type === 'legendary' ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' : drawResult?.type === 'rare' ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-gradient-to-r from-green-400 to-green-600'}`}>
-                                            {drawResult?.url && (
-                                                <img src={drawResult.url} alt={drawResult.type} className="card-image"/>
-                                            )}
-                                            <div className="text-4xl mb-3 animate-bounce">
-                                                {drawResult?.type === 'legendary' ? '🥇' : drawResult?.type === 'rare' ? '💎' : '🌟'}
-                                            </div>
-                                            <div className="bg-white/90 rounded-2xl p-4 mb-4">
-                                                <div className="text-xl font-black text-purple-700">
-                                                    {drawResult?.type === 'legendary' ? '傳說級大獎！' : drawResult?.type === 'rare' ? '稀有卡片！' : '普通卡片！'}
-                                                </div>
-                                            </div>
-                                            <div className="text-white text-lg font-bold">
-                                                {drawResult?.type === 'legendary' ? '恭喜獲得最稀有的驚喜！' : drawResult?.type === 'rare' ? '不錯的收穫！' : '下次會更好！'}
-                                            </div>
+                                {/* RESULT 狀態 - 優化排版和文字 */}
+                                {gameState === 'result' && drawResult && (
+                                    <div className="flex flex-col items-center justify-center space-y-4 card-enter">
+                                        {drawResult.url && (
+                                            <img
+                                                src={drawResult.url}
+                                                alt={drawResult.type}
+                                                className={`card-image ${drawResult.type}`}
+                                            />
+                                        )}
+                                        <div className={`rarity-tag ${drawResult.type}`}>
+                                            {drawResult.type.toUpperCase()}
+                                        </div>
+                                        <div className={`result-text ${drawResult.type} text-center`}>
+                                            {drawResult.type === 'ssr' ? '🎉 恭喜獲得 SSR 大獎！' :
+                                             drawResult.type === 'sr' ? '💎 恭喜獲得 SR 卡片！' :
+                                             '🌟 獲得稀有卡片！'}
                                         </div>
                                         
                                         <button
