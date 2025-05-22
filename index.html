@@ -1058,11 +1058,13 @@
                                         <div className={`rarity-tag ${drawResult.type}`}>
                                             {drawResult.type.toUpperCase()}
                                         </div>
+                                        {/* START: 抽卡結果文字調整 */}
                                         <div className={`result-text ${drawResult.type} text-center`}>
-                                            {drawResult.type === 'ssr' ? '🎉 恭喜獲得 SSR 大獎！' :
-                                             drawResult.type === 'sr' ? '💎 恭喜獲得 SR 卡片！' :
-                                             '🌟 獲得稀有卡片！'}
+                                            {drawResult.type === 'ssr' ? '✨ SSR 卡片！' :
+                                             drawResult.type === 'sr' ? '💎 SR 卡片！' :
+                                             '🌟 R 卡片！'}
                                         </div>
+                                        {/* END: 抽卡結果文字調整 */}
                                         
                                         <button
                                             onClick={resetGame}
