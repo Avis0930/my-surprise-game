@@ -309,62 +309,6 @@
             const cardImages = {
                 sss: [
                     'https://github.com/Avis0930/my-surprise-game/blob/main/images/sss1.jpg?raw=true',
-                    'image_c158ac.png', // SSS 等級新圖
-                ],
-                ssr: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr3.jpg?raw=true',
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr4.jpg?raw=true',
-                    'image_c082f1.png', // SSR 等級新圖
-                    'image_c1cd68.png', // SSR 等級新圖
-                    // 總數 6 (為了滿足總數 SSR-4，可能需要從這些圖片中選擇 4 張，或者新增 2 張)
-                    // 為了滿足總數 SSR-4, 我將從上面選擇4張，並移除多的兩張，以確保不會誤解
-                    // 最終選擇: sss1.jpg, ssr1.jpg, ssr2.jpg, ssr3.jpg
-                ],
-                sr: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr2.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr3.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr4.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr5.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr6.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr7.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr8.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr9.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr10.jpg?raw=true',
-                    'image_c0f00a.png', // SR 等級新圖
-                    // 總數 11 (為了滿足總數 SR-10，我將移除 image_c0f00a.png 或其他一張)
-                    // 最終選擇: sr1.jpg - sr10.jpg
-                ],
-                r: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r2.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r3.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r4.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r5.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r6.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r7.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r8.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r9.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r10.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r11.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r12.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r13.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r14.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r15.jpg?raw=true',
-                    'image_c0feb2.png', // R 等級新圖
-                    'image_c3b926.jpg', // R 等級新圖
-                    'image_f7ec41.jpg', // R 等級新圖
-                    // 總數 18 (為了滿足總數 R-17，我將移除一張)
-                    // 最終選擇: r1.jpg - r15.jpg, image_c0feb2.png, image_c3b926.jpg
-                ]
-            };
-
-            // 根據您提供的最終總數來構建實際的圖片陣列
-            const actualCardImages = {
-                sss: [
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/sss1.jpg?raw=true'
                 ], // 1張
                 ssr: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
@@ -404,6 +348,9 @@
                     'https://github.com/Avis0930/my-surprise-game/blob/main/images/r17.jpg?raw=true'  // 新增R17
                 ] // 17張
             };
+
+            // 根據您提供的最終總數來構建實際的圖片陣列 (已直接使用上述 `cardImages`)
+            const actualCardImages = cardImages;
 
             // *** END: 抽卡圖片配置 ***
 
@@ -862,7 +809,6 @@
                                 [newGrid[r][c].emoji, newGrid[prevR][prevC].emoji] = [newGrid[prevR][prevC].emoji, newGrid[r][c].emoji]; // 換回來
                                 await new Promise(resolve => requestAnimationFrame(() => {
                                     setGrid(newGrid);
-                                    resolve();
                                 }));
                             }
                         }
@@ -1314,14 +1260,14 @@
                     let interval = null;
                     if (timerActive && timeLeft > 0 && !gameOver) {
                         interval = setInterval(() => {
-                            setTimeLeft(timeLeft => {
+                            setTimeLeft(timeLeft => { // 這裡修正了括號位置
                                 if (timeLeft <= 1) {
                                     setGameOver(true);
                                     setTimerActive(false);
                                     return 0;
                                 }
                                 return timeLeft - 1;
-                            );
+                            }); // <-- 修正後的括號位置
                         }, 1000);
                     } else if (timeLeft === 0 && !gameOver) { // 時間結束時觸發遊戲結束
                         setGameOver(true);
