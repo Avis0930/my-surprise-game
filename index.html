@@ -75,7 +75,7 @@
             touch-action: manipulation;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
             will-change: transform, opacity;
-            overflow: hidden; 
+            overflow: hidden;
         }
         .candy-tile.selected {
             border: 3px solid #FFD700; /* 黃金邊框選中 */
@@ -121,15 +121,18 @@
             transition: all 0.3s ease-in-out;
             object-fit: cover;
             aspect-ratio: 1 / 1;
-            position: relative; /* For pseudo-elements */
+            position: relative; /* For pseudo-elements and overlays */
             overflow: hidden; /* For shine effect */
+            /* Ensure smooth animations */
+            will-change: transform, box-shadow, border-color;
         }
 
         /* 稀有度邊框顏色 (與標籤顏色呼應) */
-        .card-image.sss { border-color: #00BFFF; }
-        .card-image.ssr { border-color: #FFD700; }
-        .card-image.sr { border-color: #DA70D6; }
-        .card-image.r { border-color: #87CEEB; }
+        .card-image.sss { border-color: #FFD700; } /* SSS 邊框初始為金色，動畫中變彩虹 */
+        .card-image.ssr { border-color: #FFD700; } /* SSR 邊框初始為金色 */
+        .card-image.sr { border-color: #BA55D3; } /* SR 邊框初始為紫色 */
+        .card-image.r { border-color: #87CEEB; } /* R 邊框初始為淺藍色 */
+
 
         /* 稀有度標籤樣式 - 增強視覺效果 */
         .rarity-tag {
@@ -147,9 +150,10 @@
             transition: all 0.3s ease;
             transform: translateY(0);
             border: 3px solid;
+            will-change: background, color, text-shadow, border-color, box-shadow, transform;
         }
         
-        /* 抽卡動畫 - 揭示 */
+        /* 抽卡動畫 - 揭示 (通用) */
         @keyframes flip-in {
             0% { transform: perspective(800px) rotateY(-90deg) scale(0.8); opacity: 0; }
             70% { transform: perspective(800px) rotateY(10deg) scale(1.05); opacity: 1; }
@@ -169,103 +173,174 @@
             100% { transform: translateY(0px); }
         }
 
-        /* --- SSS 等級專屬效果 --- */
+        /* --- R 等級 (藍色主題，基礎閃光效果) --- */
+        .rarity-tag.r {
+            background: linear-gradient(45deg, #ADD8E6 0%, #87CEEB 50%, #B0E0E6 100%); /* 淺藍漸變 */
+            color: #333;
+            text-shadow: 1px 1px 4px rgba(255,255,255,0.7);
+            border-color: #E0FFFF; /* 淺藍邊框 */
+            animation: tag-float 3s infinite ease-in-out;
+        }
+        .card-reveal.r .card-image {
+            animation: flip-in 0.6s ease-out forwards, r-flash 1.5s infinite alternate 0.6s;
+        }
+        @keyframes r-flash {
+            0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 4px 20px rgba(135,206,235,0.6), 0 0 10px rgba(135,206,235,0.4); } /* 淺藍色閃光 */
+        }
+
+        /* --- SR 等級 (紫色主題，星星裝飾 + 閃光) --- */
+        .rarity-tag.sr {
+            background: linear-gradient(45deg, #8A2BE2 0%, #BA55D3 50%, #DA70D6 100%); /* 紫羅蘭到蘭花紫漸變 */
+            color: white;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+            border-color: #D8BFD8; /* 淺紫邊框 */
+            animation: tag-float 3s infinite ease-in-out;
+        }
+        .card-reveal.sr .card-image {
+            animation: flip-in 0.6s ease-out forwards, sr-glow 1.5s infinite alternate 0.6s;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes sr-glow {
+            0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 4px 25px rgba(138,43,226,0.7), 0 0 15px rgba(138,43,226,0.5); } /* 紫色光暈 */
+        }
+        /* 星星裝飾 */
+        .card-reveal.sr .card-image::before,
+        .card-reveal.sr .card-image::after {
+            content: '✨'; /* 星星符號 */
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: sr-star-twinkle 2s infinite ease-out 0.8s; /* 延遲出現 */
+            pointer-events: none;
+        }
+        .card-reveal.sr .card-image::before {
+            top: 10%; left: 15%;
+            animation-delay: 0.9s;
+        }
+        .card-reveal.sr .card-image::after {
+            bottom: 15%; right: 20%;
+            animation-delay: 1.2s;
+            font-size: 1.2rem;
+        }
+        @keyframes sr-star-twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+
+        /* --- SSR 等級 (金色主題，強烈光效 + 星星閃爍) --- */
+        .rarity-tag.ssr {
+            background: linear-gradient(45deg, #FFD700 0%, #FFA500 60%, #FFCC00 100%); /* 金橙漸變 */
+            color: #8B4513;
+            text-shadow: 1px 1px 4px rgba(255,255,255,0.8);
+            border-color: #FFECB3; /* 淺金邊框 */
+            animation: tag-float 3s infinite ease-in-out, ssr-tag-glow 1.5s infinite alternate;
+        }
+        @keyframes ssr-tag-glow {
+            0%, 100% { box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 6px 20px rgba(255,215,0,0.8), 0 0 15px rgba(255,215,0,0.5); }
+        }
+        .card-reveal.ssr .card-image {
+            animation: flip-in 0.6s ease-out forwards, ssr-card-glow 1.5s infinite alternate 0.6s;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes ssr-card-glow {
+            0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 4px 25px rgba(255,215,0,0.8), 0 0 20px rgba(255,215,0,0.7); } /* 金色強烈光暈 */
+        }
+        /* 星星閃爍 */
+        .card-reveal.ssr .card-image::before,
+        .card-reveal.ssr .card-image::after {
+            content: '';
+            position: absolute;
+            background: radial-gradient(circle at center, #FFF 0%, transparent 70%);
+            animation: ssr-star-burst 1.5s infinite ease-out 0.8s;
+            pointer-events: none;
+        }
+        .card-reveal.ssr .card-image::before {
+            width: 30px; height: 30px;
+            top: 20%; left: 70%;
+            animation-delay: 0.9s;
+        }
+        .card-reveal.ssr .card-image::after {
+            width: 20px; height: 20px;
+            bottom: 10%; left: 30%;
+            animation-delay: 1.2s;
+        }
+        @keyframes ssr-star-burst {
+            0% { transform: scale(0); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+
+        /* --- SSS 等級 (彩虹主題，動態漸變 + 鑽石特效) --- */
         .rarity-tag.sss {
-            background: linear-gradient(45deg, #00FFFF 0%, #00BFFF 50%, #1E90FF 100%);
+            background: linear-gradient(45deg, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3); /* 彩虹漸變 */
+            background-size: 400% 400%; /* 為了動態漸變 */
             color: white;
             text-shadow: 0 0 8px #fff, 0 0 12px #00BFFF, 0 0 15px #1E90FF;
             border-color: #E0FFFF;
-            animation: pulse-glow 1.5s infinite alternate, tag-float 3s infinite ease-in-out;
+            animation: pulse-glow 1.5s infinite alternate, tag-float 3s infinite ease-in-out, sss-rainbow-bg 10s infinite linear;
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.7); /* 強烈內外發光 */
+        }
+        @keyframes sss-rainbow-bg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         @keyframes pulse-glow {
             0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 5px rgba(255, 255, 255, 0.5); }
             50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.7); }
             100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 5px rgba(255, 255, 255, 0.5); }
         }
-        /* SSS 卡片獨有動畫 */
+
         .card-reveal.sss .card-image {
-            animation: flip-in 0.6s ease-out forwards, sss-pulse-scale 2s infinite alternate 0.6s, sss-border-pulse 1s infinite alternate 0.6s;
+            animation: flip-in 0.6s ease-out forwards, sss-pulse-scale 2s infinite alternate 0.6s, sss-border-rainbow 5s infinite linear 0.6s;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* 基礎陰影 */
         }
         @keyframes sss-pulse-scale {
             0% { transform: scale(1); }
             50% { transform: scale(1.03); }
             100% { transform: scale(1); }
         }
-        @keyframes sss-border-pulse {
-            0% { border-color: #00FFFF; box-shadow: 0 4px 15px rgba(0,255,255,0.4), 0 0 20px rgba(0,255,255,0.6); }
-            50% { border-color: #00BFFF; box-shadow: 0 4px 25px rgba(0,255,255,0.8), 0 0 40px rgba(0,255,255,0.9); }
-            100% { border-color: #00FFFF; box-shadow: 0 4px 15px rgba(0,255,255,0.4), 0 0 20px rgba(0,255,255,0.6); }
+        @keyframes sss-border-rainbow {
+            0% { border-color: #FF0000; box-shadow: 0 4px 20px rgba(255,0,0,0.7); }
+            16% { border-color: #FF7F00; box-shadow: 0 4px 20px rgba(255,127,0,0.7); }
+            33% { border-color: #FFFF00; box-shadow: 0 4px 20px rgba(255,255,0,0.7); }
+            50% { border-color: #00FF00; box-shadow: 0 4px 20px rgba(0,255,0,0.7); }
+            66% { border-color: #0000FF; box-shadow: 0 4px 20px rgba(0,0,255,0.7); }
+            83% { border-color: #4B0082; box-shadow: 0 4px 20px rgba(75,0,130,0.7); }
+            100% { border-color: #9400D3; box-shadow: 0 4px 20px rgba(148,0,211,0.7); }
         }
-        /* SSS 卡片內部的流光效果 */
+        /* SSS 卡片內部的鑽石閃爍效果 */
         .card-reveal.sss .card-image::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(60deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
-            transform: rotate(45deg);
-            animation: sss-shine 3s infinite linear;
-            opacity: 0.8;
-            mix-blend-mode: overlay; /* 混合模式 */
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.8) 0%, transparent 10%),
+                radial-gradient(circle at 80% 30%, rgba(255,255,255,0.8) 0%, transparent 10%),
+                radial-gradient(circle at 50% 70%, rgba(255,255,255,0.8) 0%, transparent 10%);
+            background-size: 200% 200%;
+            animation: sss-diamond-sparkle 1.5s infinite alternate;
+            pointer-events: none;
+            mix-blend-mode: screen; /* 讓光效疊加更自然 */
         }
-        @keyframes sss-shine {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
-        }
-
-        /* --- SSR 等級專屬效果 --- */
-        .rarity-tag.ssr {
-            background: linear-gradient(45deg, #FFD700 0%, #FFA500 60%, #FFCC00 100%);
-            color: #8B4513;
-            text-shadow: 1px 1px 4px rgba(255,255,255,0.8);
-            border-color: #FFECB3;
-            animation: tag-float 3s infinite ease-in-out;
-        }
-        .card-reveal.ssr .card-image {
-            animation: flip-in 0.6s ease-out forwards, ssr-glow 1.5s infinite alternate 0.6s, card-pulse 1.5s infinite alternate 0.6s;
-        }
-        @keyframes ssr-glow {
-            0% { box-shadow: 0 4px 15px rgba(255,215,0,0.4), 0 0 0px rgba(255,215,0,0); }
-            50% { box-shadow: 0 4px 20px rgba(255,215,0,0.8), 0 0 15px rgba(255,215,0,0.5); }
-            100% { box-shadow: 0 4px 15px rgba(255,215,0,0.4), 0 0 0px rgba(255,215,0,0); }
-        }
-
-        /* --- SR 等級專屬效果 --- */
-        .rarity-tag.sr {
-            background: linear-gradient(45deg, #8A2BE2 0%, #BA55D3 50%, #DA70D6 100%);
-            color: white;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
-            border-color: #D8BFD8;
-            animation: tag-float 3s infinite ease-in-out;
-        }
-        .card-reveal.sr .card-image {
-            animation: flip-in 0.6s ease-out forwards, sr-bounce-in 0.8s ease-out 0.6s;
-        }
-        @keyframes sr-bounce-in {
-            0% { transform: translateY(-50px) scale(0.8); opacity: 0; }
-            60% { transform: translateY(10px) scale(1.05); opacity: 1; }
-            100% { transform: translateY(0) scale(1); }
-        }
-        
-        /* --- R 等級專屬效果 --- */
-        .rarity-tag.r {
-            background: linear-gradient(45deg, #ADD8E6 0%, #87CEEB 50%, #B0E0E6 100%);
-            color: #333;
-            text-shadow: 1px 1px 4px rgba(255,255,255,0.7);
-            border-color: #E0FFFF;
-            animation: tag-float 3s infinite ease-in-out;
-        }
-        .card-reveal.r .card-image {
-             animation: flip-in 0.6s ease-out forwards; /* R 級保持基礎翻轉 */
+        @keyframes sss-diamond-sparkle {
+            0% { transform: scale(0.5) rotate(0deg); opacity: 0.5; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+            100% { transform: scale(0.5) rotate(360deg); opacity: 0.5; }
         }
 
 
-        /* 抽卡中動畫 - 旋轉等待 - 新增卡背設計 */
+        /* --- 抽卡中動畫 (卡背設計) --- */
         @keyframes card-shuffling {
             0% { transform: perspective(600px) rotateY(0deg); }
             50% { transform: perspective(600px) rotateY(180deg); }
@@ -275,62 +350,56 @@
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
         }
-        /* 新卡背設計 */
-        .card-shuffling {
-            width: 100%;
-            max-width: 320px;
-            height: 320px;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            border: 5px solid; /* For border animation */
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, #4b0082, #8a2be2); /* 紫色漸變底色 */
-            animation: card-shuffling 1.5s infinite linear; /* 基礎翻轉 */
-            /* 模擬寶可夢/庫洛魔法使卡背紋理或光效 */
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 90% 80%, rgba(255,255,255,0.1) 0%, transparent 50%); /* 輕微點狀光暈 */
-        }
-
-        .card-shuffling::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent); /* 閃爍流光 */
-            background-size: 200% 100%;
-            animation: card-back-shine 2s infinite linear; /* 流光動畫 */
-        }
-        .card-shuffling::after {
-            content: '♦️'; /* 中央圖案 */
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotateY(0deg); /* 確保圖案不會跟著卡片翻轉 */
-            font-size: 5rem;
-            color: rgba(255, 255, 255, 0.7);
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
-            animation: pulse-glow-symbol 2s infinite alternate; /* 符號呼吸光暈 */
+        @keyframes border-shimmer {
+            0% { border-image-source: linear-gradient(45deg, #FFD700, #FF69B4, #4169E1); }
+            25% { border-image-source: linear-gradient(45deg, #FF69B4, #4169E1, #FFD700); }
+            50% { border-image-source: linear-gradient(45deg, #4169E1, #FFD700, #FF69B4); }
+            75% { border-image-source: linear-gradient(45deg, #FF69B4, #4169E1, #FFD700); }
+            100% { border-image-source: linear-gradient(45deg, #FFD700, #FF69B4, #4169E1); }
         }
         @keyframes pulse-glow-symbol {
             0% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
             50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
             100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
         }
-        /* 卡背邊框動畫 - 庫洛魔法使風格 */
+
         .card-shuffling {
+            width: 100%;
+            max-width: 320px;
+            height: 320px;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            border: 5px solid;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #4b0082, #8a2be2); /* 紫色漸變底色 */
+            animation: card-shuffling 1.5s infinite linear;
             border-image: linear-gradient(45deg, #FFD700, #FF69B4, #4169E1) 1; /* 漸變邊框 */
             animation: card-shuffling 1.5s infinite linear, border-shimmer 2s infinite linear;
+            will-change: transform, background, border-image, box-shadow;
         }
-        @keyframes border-shimmer {
-            0% { border-image-source: linear-gradient(45deg, #FFD700, #FF69B4, #4169E1); }
-            25% { border-image-source: linear-gradient(45deg, #FF69B4, #4169E1, #FFD700); }
-            50% { border-image-source: linear-gradient(45deg, #4169E1, #FFD700, #FF69B4); }
-            75% { border-image-source: linear-gradient(45deg, #FF69B4, #4169E1, #FFD700); } /* 再次循環 */
-            100% { border-image-source: linear-gradient(45deg, #FFD700, #FF69B4, #4169E1); }
+
+        .card-shuffling::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent); /* 閃爍流光 */
+            background-size: 200% 100%;
+            animation: card-back-shine 2s infinite linear;
+            pointer-events: none;
+            will-change: background-position;
+        }
+        .card-shuffling::after {
+            content: '✨'; /* 替換為更抽象的符號 */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateY(0deg);
+            font-size: 5rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            animation: pulse-glow-symbol 2s infinite alternate;
+            will-change: transform, opacity, text-shadow;
         }
 
     </style>
@@ -345,7 +414,7 @@
             const [currentPage, setCurrentPage] = useState('home');
             const [gameResults, setGameResults] = useState({});
             const [gameState, setGameState] = useState('ready');
-            const [drawResult, setDrawResult] = useState(null); 
+            const [drawResult, setDrawResult] = useState(null);
             const [recentDrawnCards, setRecentDrawnCards] = useState([]);
             const RECENT_DRAWN_LIMIT = 3;
 
@@ -595,7 +664,7 @@
                 const candies = ['🍭', '🍬', '🍫', '🧁', '🍩'];
                 const rows = 6;
                 const cols = 6;
-                const targetScore = 500; 
+                const targetScore = 500;
 
                 const [grid, setGrid] = useState([]);
                 const [score, setScore] = useState(0);
@@ -826,7 +895,7 @@
                             
                             const hasMatch = checkMatches(newGrid).length > 0;
                             if (hasMatch) {
-                                await processMatches(newGrid); 
+                                await processMatches(newGrid);
                             } else {
                                 await new Promise(resolve => setTimeout(resolve, 200));
                                 [newGrid[r][c].emoji, newGrid[prevR][prevC].emoji] = [newGrid[prevR][prevC].emoji, newGrid[r][c].emoji];
@@ -961,7 +1030,7 @@
                         chosenCardUrl = filteredCards[Math.floor(Math.random() * filteredCards.length)];
                     } else {
                         chosenCardUrl = availableCards[Math.floor(Math.random() * availableCards.length)];
-                        setRecentDrawnCards([]); 
+                        setRecentDrawnCards([]);
                         console.log('所有卡片已抽取過一輪，重置近期抽卡列表。');
                     }
 
@@ -1078,7 +1147,7 @@
                             {games.map((game, index) => {
                                 const gradients = [
                                     'from-pink-400 to-rose-400',
-                                    'from-cyan-400 to-blue-400', 
+                                    'from-cyan-400 to-blue-400',
                                     'from-purple-400 to-violet-400',
                                     'from-green-400 to-emerald-400'
                                 ];
@@ -1122,7 +1191,6 @@
                 const [attempts, setAttempts] = useState(0);
                 const [gameOver, setGameOver] = useState(false);
                 
-                // useEffect 確保每次進入遊戲時都會初始化狀態
                 useEffect(() => {
                     resetNumberGame();
                 }, []);
@@ -1139,8 +1207,7 @@
                 };
 
                 const checkGuess = () => {
-                    // 檢查輸入是否為3位數字且不重複
-                    if (guess.length !== 3 || new Set(guess.split('')).size !== 3) { // 修正了這裡的 set(guess)
+                    if (guess.length !== 3 || new Set(guess.split('')).size !== 3) {
                         alert('請輸入3位不重複數字！');
                         return;
                     }
@@ -1159,10 +1226,10 @@
                     setAttempts(attempts + 1);
 
                     if (a === 3) {
-                        setGameOver(true); // 遊戲勝利時也將 gameOver 設為 true
+                        setGameOver(true);
                         completeGame('guess-number', 3);
                         setCurrentPage('success-number');
-                    } else if (attempts + 1 >= 10) { // 在檢查完當前嘗試次數後判斷是否達到上限
+                    } else if (attempts + 1 >= 10) {
                         setGameOver(true);
                     }
 
@@ -1191,7 +1258,7 @@
                                     </p>
                                 </div>
                                 <div className="p-6">
-                                    {!gameOver || (gameOver && attempts < 10) ? ( // 只有在遊戲未結束 或 遊戲結束但勝利時才顯示輸入區
+                                    {!gameOver || (gameOver && attempts < 10) ? (
                                         <div className="space-y-4">
                                             <div className="space-y-3">
                                                 <input
@@ -1201,12 +1268,12 @@
                                                     placeholder="輸入3位數字"
                                                     className="w-full p-4 border-4 border-purple-300 rounded-full text-center text-xl font-bold focus:border-pink-400 focus:outline-none bg-white text-gray-800"
                                                     maxLength={3}
-                                                    disabled={gameOver && attempts >= 10} // 失敗後禁用輸入框
+                                                    disabled={gameOver && attempts >= 10}
                                                 />
                                                 <button
                                                     onClick={checkGuess}
                                                     className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-2 border-white"
-                                                    disabled={gameOver && attempts >= 10} // 失敗後禁用按鈕
+                                                    disabled={gameOver && attempts >= 10}
                                                 >
                                                     猜測! 💫
                                                 </button>
@@ -1220,7 +1287,7 @@
                                                 ))}
                                             </div>
                                         </div>
-                                    ) : ( // 遊戲失敗的提示
+                                    ) : (
                                         <div className="text-center space-y-4">
                                             <div className="text-4xl animate-pulse">😅 遊戲結束</div>
                                             <div className="text-lg font-bold text-purple-700 bg-purple-100 rounded-full px-4 py-2">
