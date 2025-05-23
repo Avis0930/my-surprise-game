@@ -28,1563 +28,601 @@
         @keyframes whack-in {
             0% { transform: translateY(100%) scale(0.8); }
             50% { transform: translateY(-10%) scale(1.1); }
-            100% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(0%) scale(1); }
         }
         @keyframes whack-out {
-            0% { transform: translateY(0) scale(1); }
+            0% { transform: translateY(0%) scale(1); }
             100% { transform: translateY(100%) scale(0.8); }
         }
-        .mole-active {
-            animation: whack-in 0.2s forwards;
+        .mole-up {
+            animation: whack-in 0.3s forwards;
         }
-        .mole-hit {
-            animation: whack-out 0.2s forwards;
-            filter: grayscale(100%); /* 點擊後變灰 */
-        }
-        .mole-disappear {
-            animation: whack-out 0.2s forwards;
+        .mole-down {
+            animation: whack-out 0.3s forwards;
         }
 
-        /* Candy Crush 遊戲樣式 */
-        .candy-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 2px;
-            width: 100%; /* 確保網格在容器內填滿 */
-            max-width: 300px; /* 限制最大寬度，避免過大 */
-            margin: 0 auto; /* 置中 */
-            aspect-ratio: 1 / 1; /* 保持正方形 */
-            background-color: #8B4513; /* 巧克力色背景 */
-            padding: 5px;
-            border-radius: 10px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        /* 記憶卡片翻轉效果 */
+        .memory-card {
+            width: 100px;
+            height: 100px;
+            perspective: 1000px;
+            cursor: pointer;
         }
-        .candy-tile {
-            width: 100%;
-            padding-bottom: 100%; /* Make them square */
+        .memory-card-inner {
             position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        .memory-card.flipped .memory-card-inner {
+            transform: rotateY(180deg);
+        }
+        .memory-card-front, .memory-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: rgba(255, 255, 255, 0.1); /* 淺色背景，讓糖果更突出 */
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.1s ease-out, opacity 0.2s ease-out;
-            user-select: none;
-            touch-action: manipulation;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
-            will-change: transform, opacity;
-            overflow: hidden;
+            font-size: 2.5rem;
+            color: white;
+            font-weight: bold;
         }
-        .candy-tile.selected {
-            border: 3px solid #FFD700; /* 黃金邊框選中 */
-            box-shadow: 0 0 15px #FFD700;
+        .memory-card-front {
+            background-color: #6d28d9; /* Deep purple */
         }
-        .candy-tile.clearing {
-            animation: fadeOut 0.2s forwards; /* 消除時的動畫時間縮短 */
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.2); } /* 縮小更多以加速消失感 */
-        }
-        .candy-tile.falling {
-            animation: fallDown 0.2s ease-out forwards;
-        }
-        @keyframes fallDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .memory-card-back {
+            background-color: #8b5cf6; /* Lighter purple */
+            transform: rotateY(180deg);
         }
 
-        .candy-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            /* 調整糖果表情符號的大小 */
-            font-size: 2.5rem; /* 增大糖果表情符號大小 */
+        /* Candy Crush styles */
+        .candy-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 2px;
+            border: 2px solid #a78bfa;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px; /* Adjust as needed */
+            aspect-ratio: 1 / 1; /* Keep grid square */
+        }
+        .candy-tile {
             width: 100%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: transform 0.1s ease-in-out;
+            background-color: #e0e7ff; /* Light background for tiles */
         }
+        .candy-tile.selected {
+            transform: scale(0.9);
+            border: 2px solid #f97316;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.7);
+        }
+        /* Candy colors */
+        .candy-red { background-color: #ef4444; }
+        .candy-blue { background-color: #3b82f6; }
+        .candy-green { background-color: #22c55e; }
+        .candy-yellow { background-color: #eab308; }
+        .candy-purple { background-color: #a855f7; }
+        .candy-orange { background-color: #f97316; }
 
-        /* 抽卡圖片樣式 */
-        .card-image {
-            width: 100%;
-            max-width: 320px;
-            height: 320px;
-            border-radius: 0.75rem;
-            border: 5px solid;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: all 0.3s ease-in-out;
-            object-fit: cover;
-            aspect-ratio: 1 / 1;
-            position: relative; /* For pseudo-elements and overlays */
-            overflow: hidden; /* For shine effect */
-            /* Ensure smooth animations */
-            will-change: transform, box-shadow, border-color;
+        /* Animation for falling candies */
+        @keyframes fall {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-
-        /* 稀有度邊框顏色 (與標籤顏色呼應) */
-        .card-image.sss { border-color: #FFD700; } /* SSS 邊框初始為金色，動畫中變彩虹 */
-        .card-image.ssr { border-color: #FFD700; } /* SSR 邊框初始為金色 */
-        .card-image.sr { border-color: #BA55D3; } /* SR 邊框初始為紫色 */
-        .card-image.r { border-color: #87CEEB; } /* R 邊框初始為淺藍色 */
-
-
-        /* 稀有度標籤樣式 - 增強視覺效果 */
-        .rarity-tag {
-            font-weight: bold;
-            padding: 0.7rem 1.2rem;
-            margin-top: 1.5rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            transform: translateY(0);
-            border: 3px solid;
-            will-change: background, color, text-shadow, border-color, box-shadow, transform, clip-path;
-            /* 新的形狀: 類似勳章或寶石切割的八邊形 */
-            clip-path: polygon(
-                20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%
-            );
-            /* 能量光暈動畫 - 基礎效果 */
-            animation: energy-halo 2s infinite alternate, tag-float 3s infinite ease-in-out;
-            /* 寶石切割面效果 */
-            background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.2) 100%);
+        .candy-tile-fall {
+            animation: fall 0.3s ease-out forwards;
         }
-
-        @keyframes energy-halo {
-            0% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); }
-            100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
-        }
-        
-        /* 抽卡動畫 - 揭示 (通用) */
-        @keyframes flip-in {
-            0% { transform: perspective(800px) rotateY(-90deg) scale(0.8); opacity: 0; }
-            70% { transform: perspective(800px) rotateY(10deg) scale(1.05); opacity: 1; }
-            100% { transform: perspective(800px) rotateY(0deg) scale(1); opacity: 1; }
-        }
-
-        /* 通用卡片脈衝/呼吸動畫 */
-        @keyframes card-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.01); }
-            100% { transform: scale(1); }
-        }
-        /* 標籤輕微浮動動畫 */
-        @keyframes tag-float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
-            100% { transform: translateY(0px); }
-        }
-
-        /* --- R 等級 (藍色主題，增加細微條紋) --- */
-        .rarity-tag.r {
-            background: linear-gradient(45deg, #ADD8E6 0%, #87CEEB 50%, #B0E0E6 100%); /* 淺藍漸變 */
-            color: #333;
-            text-shadow: 1px 1px 4px rgba(255,255,255,0.7);
-            border-color: #E0FFFF; /* 淺藍邊框 */
-            /* 增加細微橫向掃描線紋理 */
-            background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.05) 50%, transparent 50%, transparent 100%), linear-gradient(45deg, #ADD8E6 0%, #87CEEB 50%, #B0E0E6 100%);
-            background-size: 10px 10px, 100% 100%;
-        }
-        .card-reveal.r .card-image {
-            animation: flip-in 0.6s ease-out forwards, r-flash 1.5s infinite alternate 0.6s;
-            border-color: #87CEEB; /* 與標籤呼應 */
-        }
-        @keyframes r-flash {
-            0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-            50% { box-shadow: 0 4px 20px rgba(135,206,235,0.6), 0 0 10px rgba(135,206,235,0.4); } /* 淺藍色閃光 */
-        }
-
-        /* --- SR 等級 (紫色主題，加深邊框 + 更強閃光) --- */
-        .rarity-tag.sr {
-            background: linear-gradient(45deg, #8A2BE2 0%, #BA55D3 50%, #DA70D6 100%); /* 紫羅蘭到蘭花紫漸變 */
-            color: white;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
-            border-color: #A020F0; /* 更深的紫色邊框 */
-            /* 增加閃爍的魔法符文背景 */
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" font-family="Arial" font-size="60" fill="rgba(255,255,255,0.15)" text-anchor="middle" dominant-baseline="middle">🔮</text></svg>'), linear-gradient(45deg, #8A2BE2 0%, #BA55D3 50%, #DA70D6 100%);
-            background-size: 40% 40%, 100% 100%;
-            background-repeat: no-repeat, no-repeat;
-            background-position: center center, center center;
-            /* 更強的能量光暈 */
-            animation: sr-energy-halo 2s infinite alternate, tag-float 3s infinite ease-in-out;
-        }
-        @keyframes sr-energy-halo {
-            0% { box-shadow: 0 0 8px rgba(255, 255, 255, 0.4); }
-            100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
-        }
-        .card-reveal.sr .card-image {
-            animation: flip-in 0.6s ease-out forwards, sr-glow 1.5s infinite alternate 0.6s;
-            position: relative;
-            overflow: hidden;
-            border-color: #BA55D3; /* 與標籤呼應 */
-        }
-        @keyframes sr-glow {
-            0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-            50% { box-shadow: 0 4px 30px rgba(138,43,226,0.8), 0 0 20px rgba(138,43,226,0.6); } /* 更強的紫色光暈 */
-        }
-        /* 星星裝飾 */
-        .card-reveal.sr .card-image::before,
-        .card-reveal.sr .card-image::after {
-            content: '✨'; /* 星星符號 */
-            position: absolute;
-            font-size: 1.5rem;
-            opacity: 0;
-            animation: sr-star-twinkle 2s infinite ease-out 0.8s; /* 延遲出現 */
-            pointer-events: none;
-        }
-        .card-reveal.sr .card-image::before {
-            top: 10%; left: 15%;
-            animation-delay: 0.9s;
-        }
-        .card-reveal.sr .card-image::after {
-            bottom: 15%; right: 20%;
-            animation-delay: 1.2s;
-            font-size: 1.2rem;
-        }
-        @keyframes sr-star-twinkle {
-            0%, 100% { opacity: 0; transform: scale(0.5); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-
-
-        /* --- SSR 等級 (金色主題，更強金屬感) --- */
-        .rarity-tag.ssr {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%); /* 調整漸變角度和終點 */
-            color: #8B4513;
-            text-shadow: 1px 1px 4px rgba(255,255,255,0.8);
-            border-color: #FFECB3; /* 淺金邊框 */
-             /* 增加光芒背景 */
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="50 5 65 30 95 35 70 55 75 85 50 70 25 85 30 55 5 35 35 30" fill="rgba(255,255,0,0.2)"/></svg>'), linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%); /* 使用星形圖案 */
-            background-size: 60% 60%, 100% 100%;
-            background-repeat: no-repeat, no-repeat;
-            background-position: center center, center center;
-            animation: ssr-tag-glow 1.5s infinite alternate, tag-float 3s infinite ease-in-out;
-        }
-        @keyframes ssr-tag-glow {
-            0%, 100% { box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
-            50% { box-shadow: 0 6px 20px rgba(255,215,0,0.8), 0 0 15px rgba(255,215,0,0.5), inset 0 0 8px rgba(255, 255, 255, 0.5); } /* 增加內發光 */
-        }
-        .card-reveal.ssr .card-image {
-            animation: flip-in 0.6s ease-out forwards, ssr-card-glow 1.5s infinite alternate 0.6s;
-            position: relative;
-            overflow: hidden;
-            border-color: #FFD700; /* 與標籤呼應 */
-            border-width: 6px; /* 略微加粗邊框 */
-            box-shadow: 0 4px 20px rgba(255,215,0,0.6); /* 更強的陰影 */
-        }
-        @keyframes ssr-card-glow {
-            0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-            50% { box-shadow: 0 4px 30px rgba(255,215,0,0.9), 0 0 25px rgba(255,215,0,0.8); } /* 更強烈金色光暈 */
-        }
-        /* 細微的邊框閃爍 */
-        .card-reveal.ssr .card-image::after {
-            content: '';
-            position: absolute;
-            top: -5px; left: -5px; right: -5px; bottom: -5px;
-            border: 6px solid transparent;
-            border-radius: 0.8rem;
-            pointer-events: none;
-            animation: ssr-border-shine 2s infinite linear 0.7s;
-        }
-        @keyframes ssr-border-shine {
-            0% { border-top-color: rgba(255, 255, 0, 0.4); border-right-color: transparent; border-bottom-color: transparent; border-left-color: transparent; }
-            25% { border-top-color: rgba(255, 255, 0, 0.4); border-right-color: rgba(255, 255, 0, 0.4); border-bottom-color: transparent; border-left-color: transparent; }
-            50% { border-top-color: transparent; border-right-color: rgba(255, 255, 0, 0.4); border-bottom-color: rgba(255, 255, 0, 0.4); border-left-color: transparent; }
-            75% { border-top-color: transparent; border-right-color: transparent; border-bottom-color: rgba(255, 255, 0, 0.4); border-left-color: rgba(255, 255, 0, 0.4); }
-            100% { border-top-color: rgba(255, 255, 0, 0.4); border-right-color: transparent; border-bottom-color: transparent; border-left-color: transparent; }
-        }
-
-
-        /* --- SSS 等級 (彩虹主題，微調色彩飽和度) --- */
-        .rarity-tag.sss {
-            background: linear-gradient(45deg, #FF4500, #FFA500, #FFFF00, #ADFF2F, #00BFFF, #4B0082, #9400D3); /* 調整橙色和綠色的飽和度 */
-            background-size: 400% 400%; /* 為了動態漸變 */
-            color: white;
-            text-shadow: 0 0 8px #fff, 0 0 12px #00BFFF, 0 0 15px #1E90FF, 0 0 20px #8A2BE2; /* 更突出的陰影 */
-            border-color: #E0FFFF;
-            animation: pulse-glow 1.5s infinite alternate, sss-rainbow-bg 10s infinite linear;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.7); /* 強烈內外發光 */
-            /* 增加更強烈的內部光效 */
-            position: relative;
-        }
-        /* SSS 標籤內部光點效果 */
-        .rarity-tag.sss::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.8) 0%, transparent 40%),
-                        radial-gradient(circle at 30% 70%, rgba(255,255,255,0.8) 0%, transparent 40%); /* 更亮的光點 */
-            animation: sss-tag-sparkle 1.5s infinite ease-out;
-            pointer-events: none;
-            mix-blend-mode: overlay;
-        }
-        @keyframes sss-tag-sparkle {
-            0% { transform: scale(0.8) rotate(0deg); opacity: 0.8; } /* 更高的初始透明度 */
-            50% { transform: scale(1) rotate(180deg); opacity: 1; }
-            100% { transform: scale(0.8) rotate(360deg); opacity: 0.8; }
-        }
-
-        @keyframes sss-rainbow-bg {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 5px rgba(255, 255, 255, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), 0 0 35px rgba(0, 255, 255, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.8); } /* 更強烈發光 */
-            100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 5px rgba(255, 255, 255, 0.5); }
-        }
-
-        .card-reveal.sss .card-image {
-            animation: flip-in 0.6s ease-out forwards, sss-pulse-scale 2s infinite alternate 0.6s, sss-border-rainbow 5s infinite linear 0.6s;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4), 0 0 10px rgba(255, 255, 255, 0.3); /* 增加基礎和外發光陰影 */
-        }
-        @keyframes sss-pulse-scale {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.04); } /* 更大的脈衝 */
-            100% { transform: scale(1); }
-        }
-        @keyframes sss-border-rainbow {
-            0% { border-color: #FF4500; box-shadow: 0 4px 20px rgba(255,69,0,0.7); }
-            16% { border-color: #FFA500; box-shadow: 0 4px 20px rgba(255,165,0,0.7); }
-            33% { border-color: #FFFF00; box-shadow: 0 4px 20px rgba(255,255,0,0.7); }
-            50% { border-color: #ADFF2F; box-shadow: 0 4px 20px rgba(173,255,47,0.7); }
-            66% { border-color: #00BFFF; box-shadow: 0 4px 20px rgba(0,191,255,0.7); }
-            83% { border-color: #4B0082; box-shadow: 0 4px 20px rgba(75,0,130,0.7); }
-            100% { border-color: #9400D3; box-shadow: 0 4px 20px rgba(148,0,211,0.7); }
-        }
-        /* SSS 卡片內部的鑽石閃爍效果 (增強) */
-        .card-reveal.sss .card-image::before,
-        .card-reveal.sss .card-image::after {
-            content: '';
-            position: absolute;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.95) 0%, transparent 15%),
-                radial-gradient(circle at 80% 30%, rgba(255,255,255,0.95) 0%, transparent 15%),
-                radial-gradient(circle at 50% 70%, rgba(255,255,255,0.95) 0%, transparent 15%); /* 更亮的光點 */
-            background-size: 200% 200%;
-            animation: sss-diamond-sparkle 1.5s infinite alternate;
-            pointer-events: none;
-            mix-blend-mode: screen;
-            opacity: 0; /* 初始隱藏 */
-            animation-delay: 0.8s; /* 延遲出現 */
-            transform: scale(0); /* 初始縮小 */
-        }
-        .card-reveal.sss .card-image::after { /* 第二個光點層 */
-            animation-delay: 1.2s;
-            background: 
-                radial-gradient(circle at 70% 80%, rgba(255,255,255,0.9) 0%, transparent 15%),
-                radial-gradient(circle at 30% 10%, rgba(255,255,255,0.9) 0%, transparent 15%); /* 略微調整亮度 */
-        }
-        @keyframes sss-diamond-sparkle {
-            0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            20% { transform: scale(0.9) rotate(90deg); opacity: 1; } /* 更大的放大 */
-            80% { transform: scale(1.3) rotate(270deg); opacity: 1; } /* 更大的放大 */
-            100% { transform: scale(0.6) rotate(360deg); opacity: 0; }
-        }
-
-
-        /* --- 抽卡中動畫 (卡背設計) --- */
-        @keyframes card-shuffling {
-            0% { transform: perspective(600px) rotateY(0deg); }
-            50% { transform: perspective(600px) rotateY(180deg); }
-            100% { transform: perspective(600px) rotateY(360deg); }
-        }
-        @keyframes card-back-shine {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        @keyframes border-shimmer {
-            0% { border-image-source: linear-gradient(45deg, #FFD700, #FF69B4, #4169E1); }
-            25% { border-image-source: linear-gradient(45deg, #FF69B4, #4169E1, #FFD700); }
-            50% { border-image-source: linear-gradient(45deg, #4169E1, #FFD700, #FF69B4); }
-            75% { border-image-source: linear-gradient(45deg, #FF69B4, #4169E1, #FFD700); }
-            100% { border-image-source: linear-gradient(45deg, #FFD700, #FF69B4, #4169E1); }
-        }
-        @keyframes pulse-glow-symbol {
-            0% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
-            100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-        }
-
-        .card-shuffling {
-            width: 100%;
-            max-width: 320px;
-            height: 320px;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            border: 5px solid;
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, #4b0082, #8a2be2); /* 紫色漸變底色 */
-            animation: card-shuffling 1.5s infinite linear;
-            border-image: linear-gradient(45deg, #FFD700, #FF69B4, #4169E1) 1; /* 漸變邊框 */
-            animation: card-shuffling 1.5s infinite linear, border-shimmer 2s infinite linear;
-            will-change: transform, background, border-image, box-shadow;
-        }
-
-        .card-shuffling::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent); /* 閃爍流光 */
-            background-size: 200% 100%;
-            animation: card-back-shine 2s infinite linear;
-            pointer-events: none;
-            will-change: background-position;
-        }
-        .card-shuffling::after {
-            content: '✨'; /* 替換為更抽象的符號 */
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotateY(0deg);
-            font-size: 5rem;
-            color: rgba(255, 255, 255, 0.7);
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
-            animation: pulse-glow-symbol 2s infinite alternate;
-            will-change: transform, opacity, text-shadow;
-        }
-
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="bg-gradient-to-br from-purple-400 to-indigo-600 min-h-screen flex items-center justify-center p-4">
+    <div id="root" class="w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden md:max-w-xl lg:max-w-2xl transform transition-all duration-300"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-        const BirthdayGameApp = () => {
-            const [currentPoints, setCurrentPoints] = useState(0);
-            const [currentPage, setCurrentPage] = useState('home');
-            const [gameResults, setGameResults] = useState({});
-            const [gameState, setGameState] = useState('ready');
-            const [drawResult, setDrawResult] = useState(null);
-            const [recentDrawnCards, setRecentDrawnCards] = useState([]);
-            const RECENT_DRAWN_LIMIT = 3;
+        const { useState, useEffect, useRef, useCallback } = React;
+        const { render } = ReactDOM;
 
-            console.log('渲染狀態:', gameState, '點數:', currentPoints);
+        // Custom Hook for confetti effect
+        const useConfetti = () => {
+            const fireConfetti = useCallback(() => {
+                const defaults = {
+                    spread: 360,
+                    ticks: 50,
+                    gravity: 0,
+                    decay: 0.94,
+                    startVelocity: 30,
+                    colors: ['#FFE66D', '#FF6B6B', '#C7F0BD', '#A3D9FF']
+                };
 
-            const games = [
-                { id: 'guess-number', name: '1A2B猜數字', points: 3, difficulty: '簡單', emoji: '🔢' },
-                { id: 'memory-card', name: '翻牌連連看', points: 3, difficulty: '中等', emoji: '🎴' },
-                { id: 'whack-a-mole', name: '打地鼠', points: 4, difficulty: '中等', emoji: '🐭' },
-                { id: 'candy-crush', name: '糖果消消樂', points: 5, difficulty: '簡單', emoji: '🍭' },
-            ];
-            const completeGame = (gameId, points) => {
-                setCurrentPoints(prev => prev + points);
-                setGameResults(prev => ({
-                    ...prev,
-                    [gameId]: (prev[gameId] || 0) + 1
-                }));
-            };
+                function shoot() {
+                    window.confetti({
+                        ...defaults,
+                        particleCount: 50,
+                        scalar: 1.2,
+                        shapes: ['circle', 'square']
+                    });
 
-            const cardImages = {
-                sss: [
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/sss.jpg?raw=true', // SSS 圖片名稱修正
-                ],
-                ssr: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr3.jpg?raw=true',
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr4.jpg?raw=true'
-                ],
-                sr: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr2.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr3.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr4.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr5.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr6.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr7.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr8.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr9.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr10.jpg?raw=true'
-                ],
-                r: [
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r2.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r3.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r4.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r5.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r6.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r7.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r8.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r9.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r10.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r11.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r12.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/blob/main/images/r13.jpg?raw=true',
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/r14.jpg?raw=true',
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/r15.jpg?raw=true',
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/r16.jpg?raw=true',
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/r17.jpg?raw=true'
-                ]
-            };
+                    window.confetti({
+                        ...defaults,
+                        particleCount: 25,
+                        scalar: 0.75,
+                        shapes: ['circle', 'square']
+                    });
+                }
 
-            const actualCardImages = cardImages;
+                setTimeout(shoot, 0);
+                setTimeout(shoot, 100);
+                setTimeout(shoot, 200);
+            }, []);
+            return fireConfetti;
+        };
+
+        const Card = ({ rarity, image, points, reward, isNew }) => {
+            const fireConfetti = useConfetti();
 
             useEffect(() => {
-                console.log('開始預載入圖片...');
-                Object.values(actualCardImages).forEach(imageArray => {
-                    imageArray.forEach(url => {
-                        const img = new Image();
-                        img.src = url;
-                        img.onload = () => console.log(`圖片載入完成: ${url}`);
-                        img.onerror = () => console.error(`圖片載入失敗: ${url}`);
-                    });
-                });
-            }, []);
+                if (isNew) {
+                    fireConfetti();
+                }
+            }, [isNew, fireConfetti]);
 
-            // 打地鼠遊戲組件
-            const WhackAMoleGame = () => {
-                const [score, setScore] = useState(0);
-                const [timeLeft, setTimeLeft] = useState(30);
-                const [activeHole, setActiveHole] = useState(null);
-                const [gameOver, setGameOver] = useState(false);
-                const [gameStarted, setGameStarted] = useState(false);
-                const timerRef = useRef(null);
-                const moleTimerRef = useRef(null);
-
-                const moles = Array.from({ length: 9 }, (_, i) => i);
-
-                const startGame = () => {
-                    setScore(0);
-                    setTimeLeft(30);
-                    setActiveHole(null);
-                    setGameOver(false);
-                    setGameStarted(true);
-                    startTimer();
-                    showMole();
-                };
-
-                const startTimer = () => {
-                    timerRef.current = setInterval(() => {
-                        setTimeLeft(prevTime => {
-                            if (prevTime <= 1) {
-                                clearInterval(timerRef.current);
-                                clearInterval(moleTimerRef.current);
-                                setGameOver(true);
-                                setActiveHole(null);
-                                return 0;
-                            }
-                            return prevTime - 1;
-                        });
-                    }, 1000);
-                };
-
-                const showMole = () => {
-                    const randomDelay = Math.random() * (1.2 - 0.8) + 0.8;
-                    moleTimerRef.current = setTimeout(() => {
-                        let newHole = Math.floor(Math.random() * moles.length);
-                        while (newHole === activeHole) {
-                            newHole = Math.floor(Math.random() * moles.length);
-                        }
-                        setActiveHole(newHole);
-
-                        const disappearDelay = Math.random() * (2.5 - 1.5) + 1.5;
-                        setTimeout(() => {
-                            if (activeHole === newHole) {
-                                setActiveHole(null);
-                            }
-                            if (!gameOver) {
-                                showMole();
-                            }
-                        }, disappearDelay * 1000);
-                    }, randomDelay * 1000);
-                };
-
-                const whackMole = (holeIndex) => {
-                    if (gameOver || activeHole !== holeIndex) {
-                        return;
-                    }
-                    setScore(prevScore => prevScore + 1);
-                    setActiveHole(null);
-                    
-                    if (!gameOver) {
-                        clearTimeout(moleTimerRef.current);
-                        showMole();
-                    }
-                };
-
-                useEffect(() => {
-                    return () => {
-                        clearInterval(timerRef.current);
-                        clearTimeout(moleTimerRef.current);
-                    };
-                }, []);
-
-                useEffect(() => {
-                    if (gameOver) {
-                        if (score >= 15) {
-                            completeGame('whack-a-mole', 4);
-                            setCurrentPage('success-whack-a-mole');
-                        }
-                    }
-                }, [gameOver, score, completeGame, setCurrentPage]);
-
-                const formatTime = (seconds) => {
-                    const mins = Math.floor(seconds / 60);
-                    const secs = seconds % 60;
-                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                };
-
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-green-300 via-lime-400 to-emerald-500 p-4 no-zoom flex items-center justify-center">
-                        <div className="max-w-md mx-auto text-center w-full">
-                            <div className="bg-white/95 backdrop-blur-sm border-4 border-green-500 shadow-xl rounded-2xl overflow-hidden p-6 mb-6">
-                                <h2 className="text-center font-black text-xl text-green-700 mb-2">🔨 打地鼠遊戲</h2>
-                                <p className="text-center text-sm text-gray-600 font-semibold mb-4">
-                                    擊中地鼠獲得分數，時間內達到15分即可過關！
-                                </p>
-                                <div className="flex justify-between items-center mb-4 bg-lime-100 rounded-full px-4 py-2 border-2 border-lime-200">
-                                    <div className="text-lg font-bold text-green-700">分數: {score}</div>
-                                    <div className={`text-xl font-bold ${timeLeft <= 10 && !gameOver ? 'text-red-500 animate-pulse' : 'text-green-700'}`}>
-                                        時間: {formatTime(timeLeft)}
-                                    </div>
-                                </div>
-
-                                {!gameStarted && !gameOver ? (
-                                    <button
-                                        onClick={startGame}
-                                        className="w-full bg-gradient-to-r from-green-500 to-green-700 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
-                                    >
-                                        🚀 開始遊戲
-                                    </button>
-                                ) : gameOver ? (
-                                    <div className="space-y-4">
-                                        <div className="text-4xl font-black text-green-700">
-                                            {score >= 15 ? '🎉 恭喜過關！' : '😅 時間結束！'}
-                                        </div>
-                                        <div className="text-xl font-bold text-gray-700 bg-gray-100 rounded-full px-4 py-2">
-                                            最終分數: {score}
-                                        </div>
-                                        {score < 15 && (
-                                            <div className="text-lg font-bold text-red-600 bg-red-100 rounded-full px-4 py-2">
-                                                未達到 {15} 分，沒有獲得獎勵哦！
-                                            </div>
-                                        )}
-                                        <button
-                                            onClick={startGame}
-                                            className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
-                                        >
-                                            🔄 再玩一次
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-3 gap-3 bg-gradient-to-br from-yellow-700 to-orange-800 p-4 rounded-xl border-4 border-yellow-600 shadow-inner">
-                                        {moles.map((holeIndex) => (
-                                            <div
-                                                key={holeIndex}
-                                                className="relative w-full aspect-square bg-gradient-to-br from-yellow-900 to-yellow-700 rounded-full flex items-center justify-center overflow-hidden"
-                                                style={{ boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }}
-                                                onClick={() => whackMole(holeIndex)}
-                                            >
-                                                {activeHole === holeIndex ? (
-                                                    <span className="absolute inset-0 flex items-center justify-center text-6xl cursor-pointer select-none mole-active">
-                                                            🐹
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-4xl text-yellow-600 select-none">🕳️</span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={() => setCurrentPage('home')}
-                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
-                            >
-                                🏠 回到首頁
-                            </button>
-                        </div>
-                    </div>
-                );
+            const getCardBorderColor = (rarity) => {
+                switch (rarity) {
+                    case 'R': return 'border-gray-400';
+                    case 'SR': return 'border-blue-400';
+                    case 'SSR': return 'border-purple-500';
+                    case 'SSS': return 'border-yellow-500';
+                    default: return 'border-gray-200';
+                }
             };
-
-            // 糖果消消樂遊戲組件
-            const CandyCrushGame = () => {
-                const candies = ['🍭', '🍬', '🍫', '🧁', '🍩'];
-                const rows = 6;
-                const cols = 6;
-                const targetScore = 500;
-
-                const [grid, setGrid] = useState([]);
-                const [score, setScore] = useState(0);
-                const [timeLeft, setTimeLeft] = useState(30);
-                const [gameOver, setGameOver] = useState(false);
-                const [gameStarted, setGameStarted] = useState(false);
-                const [selectedCandy, setSelectedCandy] = useState(null);
-                const gameIntervalRef = useRef(null);
-
-                const generateInitialGrid = () => {
-                    const newGrid = Array(rows).fill(null).map(() => Array(cols).fill(null));
-                    for (let r = 0; r < rows; r++) {
-                        for (let c = 0; c < cols; c++) {
-                            newGrid[r][c] = { emoji: candies[Math.floor(Math.random() * candies.length)], status: 'normal' };
-                        }
-                    }
-                    let hasMatch = true;
-                    while (hasMatch) {
-                        hasMatch = false;
-                        const matches = checkMatches(newGrid);
-                        if (matches.length > 0) {
-                            hasMatch = true;
-                            matches.forEach(({ r, c }) => {
-                                newGrid[r][c] = { emoji: candies[Math.floor(Math.random() * candies.length)], status: 'normal' };
-                            });
-                        }
-                    }
-                    return newGrid;
-                };
-
-                const checkMatches = (currentGrid) => {
-                    const matches = new Set();
-                
-                    for (let r = 0; r < rows; r++) {
-                        for (let c = 0; c <= cols - 3; c++) {
-                            const candy = currentGrid[r][c].emoji;
-                            if (candy && candy === currentGrid[r][c + 1].emoji && candy === currentGrid[r][c + 2].emoji) {
-                                let lineLength = 3;
-                                while (c + lineLength < cols && candy === currentGrid[r][c + lineLength].emoji) {
-                                    lineLength++;
-                                }
-                                for (let i = 0; i < lineLength; i++) {
-                                    matches.add(`${r}-${c + i}`);
-                                }
-                            }
-                        }
-                    }
-                
-                    for (let c = 0; c < cols; c++) {
-                        for (let r = 0; r <= rows - 3; r++) {
-                            const candy = currentGrid[r][c].emoji;
-                            if (candy && candy === currentGrid[r + 1][c].emoji && candy === currentGrid[r + 2][c].emoji) {
-                                let lineLength = 3;
-                                while (r + lineLength < rows && candy === currentGrid[r + lineLength][c].emoji) {
-                                    lineLength++;
-                                }
-                                for (let i = 0; i < lineLength; i++) {
-                                    matches.add(`${r + i}-${c}`);
-                                }
-                            }
-                        }
-                    }
-                    return Array.from(matches).map(pos => {
-                        const [r, c] = pos.split('-').map(Number);
-                        return { r, c };
-                    });
-                };
-                
-                const processMatches = async (initialGrid) => {
-                    let currentGrid = JSON.parse(JSON.stringify(initialGrid));
-                    let totalScoreFromThisMove = 0;
-
-                    while (true) {
-                        const matches = checkMatches(currentGrid);
-                        if (matches.length === 0) {
-                            break;
-                        }
-
-                        const matchedGroups = groupMatches(matches);
-                        matchedGroups.forEach(group => {
-                            const length = group.length;
-                            if (length === 3) totalScoreFromThisMove += 30;
-                            else if (length === 4) totalScoreFromThisMove += 60;
-                            else if (length >= 5) totalScoreFromThisMove += 100;
-                        });
-
-                        matches.forEach(({ r, c }) => {
-                            currentGrid[r][c].status = 'clearing';
-                        });
-                        await new Promise(resolve => requestAnimationFrame(() => {
-                            setGrid(JSON.parse(JSON.stringify(currentGrid)));
-                            resolve();
-                        }));
-
-                        await new Promise(resolve => setTimeout(resolve, 200));
-
-                        matches.forEach(({ r, c }) => {
-                            currentGrid[r][c] = { emoji: null, status: 'cleared' };
-                        });
-
-                        for (let c = 0; c < cols; c++) {
-                            let writeRow = rows - 1;
-                            for (let r = rows - 1; r >= 0; r--) {
-                                if (currentGrid[r][c].emoji !== null) {
-                                    currentGrid[writeRow][c] = currentGrid[r][c];
-                                    writeRow--;
-                                }
-                            }
-                            for (let r = writeRow; r >= 0; r--) {
-                                currentGrid[r][c] = { emoji: candies[Math.floor(Math.random() * candies.length)], status: 'falling' };
-                            }
-                        }
-                        
-                        await new Promise(resolve => requestAnimationFrame(() => {
-                            setGrid(JSON.parse(JSON.stringify(currentGrid)));
-                            resolve();
-                        }));
-
-                        await new Promise(resolve => setTimeout(resolve, 200));
-
-                        for (let r = 0; r < rows; r++) {
-                            for (let c = 0; c < cols; c++) {
-                                currentGrid[r][c].status = 'normal';
-                            }
-                        }
-                        await new Promise(resolve => requestAnimationFrame(() => {
-                            setGrid(JSON.parse(JSON.stringify(currentGrid)));
-                            resolve();
-                        }));
-                    }
-                    setScore(s => s + totalScoreFromThisMove);
-                };
-
-                const groupMatches = (matches) => {
-                    const visited = new Set();
-                    const groups = [];
-
-                    matches.forEach(match => {
-                        const { r, c } = match;
-                        if (!visited.has(`${r}-${c}`)) {
-                            const currentGroup = [];
-                            const queue = [{ r, c }];
-                            visited.add(`${r}-${c}`);
-                            
-                            while (queue.length > 0) {
-                                const { r: currR, c: currC } = queue.shift();
-                                currentGroup.push({ r: currR, c: currC });
-
-                                const directions = [
-                                    [-1, 0], [1, 0], [0, -1], [0, 1]
-                                ];
-
-                                for (const [dr, dc] of directions) {
-                                    const newR = currR + dr;
-                                    const newC = currC + dc;
-
-                                    if (
-                                        matches.some(m => m.r === newR && m.c === newC) &&
-                                        !visited.has(`${newR}-${newC}`)
-                                    ) {
-                                        visited.add(`${newR}-${newC}`);
-                                        queue.push({ r: newR, c: newC });
-                                    }
-                                }
-                            }
-                            groups.push(currentGroup);
-                        }
-                    });
-                    return groups;
-                };
-
-                const startGame = () => {
-                    setScore(0);
-                    setTimeLeft(30);
-                    setGameOver(false);
-                    setGameStarted(true);
-                    setSelectedCandy(null);
-                    const initialGrid = generateInitialGrid();
-                    setGrid(initialGrid);
-
-                    clearInterval(gameIntervalRef.current);
-                    gameIntervalRef.current = setInterval(() => {
-                        setTimeLeft(prevTime => {
-                            if (prevTime <= 1) {
-                                clearInterval(gameIntervalRef.current);
-                                setGameOver(true);
-                                return 0;
-                            }
-                            return prevTime - 1;
-                        });
-                    }, 1000);
-                };
-
-                useEffect(() => {
-                    if (gameOver) {
-                        clearInterval(gameIntervalRef.current);
-                        if (score >= targetScore) {
-                            completeGame('candy-crush', 5);
-                            setCurrentPage('success-candy-crush');
-                        }
-                    }
-                }, [gameOver, score, targetScore, completeGame, setCurrentPage]);
-
-                useEffect(() => {
-                    return () => clearInterval(gameIntervalRef.current);
-                }, []);
-
-                const handleCandyClick = async (r, c) => {
-                    if (gameOver || !gameStarted) return;
-
-                    if (selectedCandy) {
-                        const prevR = selectedCandy.r;
-                        const prevC = selectedCandy.c;
-
-                        const isAdjacent = (
-                            (Math.abs(r - prevR) === 1 && c === prevC) ||
-                            (Math.abs(c - prevC) === 1 && r === prevR)
-                        );
-
-                        if (isAdjacent) {
-                            const newGrid = JSON.parse(JSON.stringify(grid));
-                            [newGrid[r][c].emoji, newGrid[prevR][prevC].emoji] = [newGrid[prevR][prevC].emoji, newGrid[r][c].emoji];
-                            
-                            await new Promise(resolve => requestAnimationFrame(() => {
-                                setGrid(newGrid);
-                                resolve();
-                            }));
-                            
-                            const hasMatch = checkMatches(newGrid).length > 0;
-                            if (hasMatch) {
-                                await processMatches(newGrid);
-                            } else {
-                                await new Promise(resolve => setTimeout(resolve, 200));
-                                [newGrid[r][c].emoji, newGrid[prevR][prevC].emoji] = [newGrid[prevR][prevC].emoji, newGrid[r][c].emoji];
-                                await new Promise(resolve => requestAnimationFrame(() => {
-                                    setGrid(newGrid);
-                                }));
-                            }
-                        }
-                        setSelectedCandy(null);
-                    } else {
-                        setSelectedCandy({ r, c });
-                    }
-                };
-
-                const formatTime = (seconds) => {
-                    const mins = Math.floor(seconds / 60);
-                    const secs = seconds % 60;
-                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                };
-
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-red-300 via-orange-400 to-yellow-500 p-4 no-zoom flex items-center justify-center">
-                        <div className="max-w-md mx-auto text-center w-full">
-                            <div className="bg-white/95 backdrop-blur-sm border-4 border-orange-500 shadow-xl rounded-2xl overflow-hidden p-6 mb-6">
-                                <h2 className="text-center font-black text-xl text-orange-700 mb-2">🍬 糖果消消樂</h2>
-                                <p className="text-center text-sm text-gray-600 font-semibold mb-4">
-                                    交換糖果，達成3個以上連線消除！目標分數 {targetScore}！
-                                </p>
-                                <div className="flex justify-between items-center mb-4 bg-yellow-100 rounded-full px-4 py-2 border-2 border-yellow-200">
-                                    <div className="text-lg font-bold text-orange-700">分數: {score}</div>
-                                    <div className={`text-xl font-bold ${timeLeft <= 10 && !gameOver ? 'text-red-500 animate-pulse' : 'text-orange-700'}`}>
-                                        時間: {formatTime(timeLeft)}
-                                    </div>
-                                </div>
-
-                                {!gameStarted && !gameOver ? (
-                                    <button
-                                        onClick={startGame}
-                                        className="w-full bg-gradient-to-r from-orange-500 to-orange-700 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
-                                    >
-                                        🚀 開始遊戲
-                                    </button>
-                                ) : gameOver ? (
-                                    <div className="space-y-4">
-                                        <div className="text-4xl font-black text-orange-700">
-                                            {score >= targetScore ? '🎉 恭喜過關！' : '😅 時間結束！'}
-                                        </div>
-                                        <div className="text-xl font-bold text-gray-700 bg-gray-100 rounded-full px-4 py-2">
-                                            最終分數: {score}
-                                        </div>
-                                        {score < targetScore && (
-                                            <div className="text-lg font-bold text-red-600 bg-red-100 rounded-full px-4 py-2">
-                                                未達到 {targetScore} 分，沒有獲得獎勵哦！
-                                            </div>
-                                        )}
-                                        <button
-                                            onClick={startGame}
-                                            className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
-                                        >
-                                            🔄 再玩一次
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="candy-grid">
-                                        {grid.map((row, rIdx) =>
-                                            row.map((candyData, cIdx) => (
-                                                <div
-                                                    key={`${rIdx}-${cIdx}`}
-                                                    className={`candy-tile ${selectedCandy?.r === rIdx && selectedCandy?.c === cIdx ? 'selected' : ''} ${candyData.status === 'clearing' ? 'clearing' : ''} ${candyData.status === 'falling' ? 'falling' : ''}`}
-                                                    onClick={() => handleCandyClick(rIdx, cIdx)}
-                                                >
-                                                    <span className="candy-content">{candyData.emoji}</span>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={() => setCurrentPage('home')}
-                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
-                            >
-                                🏠 回到首頁
-                            </button>
-                        </div>
-                    </div>
-                );
+            const getCardBgColor = (rarity) => {
+                switch (rarity) {
+                    case 'R': return 'bg-gray-100';
+                    case 'SR': return 'bg-blue-50';
+                    case 'SSR': return 'bg-purple-100';
+                    case 'SSS': return 'bg-yellow-100';
+                    default: return 'bg-white';
+                }
             };
-
-            // 抽卡機制
-            const addPoints = () => {
-                setCurrentPoints(p => p + 10);
-                setGameState('ready');
-                console.log('+10點，重置為ready');
-            };
-
-            const drawCard = () => {
-                if (currentPoints < 5 || gameState !== 'ready') return;
-                setCurrentPoints(p => p - 5);
-                setGameState('drawing');
-                console.log('開始抽卡，狀態->drawing');
-                
-                setTimeout(() => {
-                    const rarityRoll = Math.random();
-                    let chosenCardUrl = null;
-                    let chosenType = '';
-                    let availableCards = [];
-
-                    // SSS: 1% (0.0 - 0.01)
-                    // SSR: 19% (0.01 - 0.20)
-                    // SR: 30% (0.20 - 0.50)
-                    // R: 50% (0.50 - 1.00)
-
-                    if (rarityRoll < 0.01) {
-                        chosenType = 'sss';
-                        availableCards = actualCardImages.sss;
-                    } else if (rarityRoll < 0.2) {
-                        chosenType = 'ssr';
-                        availableCards = actualCardImages.ssr;
-                    } else if (rarityRoll < 0.5) {
-                        chosenType = 'sr';
-                        availableCards = actualCardImages.sr;
-                    } else {
-                        chosenType = 'r';
-                        availableCards = actualCardImages.r;
-                    }
-
-                    const filteredCards = availableCards.filter(url => !recentDrawnCards.includes(url));
-
-                    if (filteredCards.length > 0) {
-                        chosenCardUrl = filteredCards[Math.floor(Math.random() * filteredCards.length)];
-                    } else {
-                        chosenCardUrl = availableCards[Math.floor(Math.random() * availableCards.length)];
-                        setRecentDrawnCards([]);
-                        console.log('所有卡片已抽取過一輪，重置近期抽卡列表。');
-                    }
-
-                    setRecentDrawnCards(prev => {
-                        const newRecent = [...prev, chosenCardUrl];
-                        if (newRecent.length > RECENT_DRAWN_LIMIT) {
-                            return newRecent.slice(1);
-                        }
-                        return newRecent;
-                    });
-                    
-                    setDrawResult({ type: chosenType, url: chosenCardUrl });
-                    setGameState('result');
-                    console.log('計時器執行，狀態->result');
-                }, 1000);
-            };
-
-            const resetGame = () => {
-                setGameState('ready');
-                console.log('重置，狀態->ready');
-                setDrawResult(null);
-            };
-
-            // 首頁
-            const HomePage = () => (
-                <div className="min-h-screen bg-gradient-to-br from-cyan-300 via-purple-400 to-pink-400 p-4 no-zoom">
-                    <div className="max-w-sm mx-auto">
-                        <div className="text-center mb-6">
-                            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border-4 border-white">
-                                <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-pink-500 mb-2">
-                                    Special GAME
-                                </h1>
-                                <p className="text-purple-700 font-semibold text-sm">完成遊戲獲得點數，集滿5點抽驚喜卡片！</p>
-                                <div className="flex justify-center space-x-2 mt-3">
-                                    <span className="text-2xl">💖</span>
-                                    <span className="text-2xl">🌈</span>
-                                    <span className="text-2xl">✨</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 移除 +10點 和 重置 按鈕 */}
-                        {/* <div className="fixed top-4 left-4 space-y-2">
-                            <button onClick={addPoints} className="bg-red-600 text-white px-4 py-2 rounded font-bold">
-                                +10點
-                            </button>
-                            <button onClick={resetGame} className="bg-gray-600 text-white px-4 py-2 rounded font-bold">
-                                重置
-                            </button>
-                        </div> */}
-
-                        <div className="mb-6 bg-gradient-to-r from-yellow-300 to-orange-300 border-4 border-white shadow-xl rounded-2xl p-6 text-center">
-                            <div className="text-2xl font-black text-white mb-2 drop-shadow-lg">
-                                ⭐ 點數: {currentPoints} ⭐
-                            </div>
-                            <div className="text-base font-bold text-purple-800 bg-white/80 rounded-full px-4 py-1">
-                                {Math.floor(currentPoints / 5)} 次抽卡機會 🎴
-                            </div>
-                        </div>
-
-                        <div className="bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 border-4 border-white rounded-2xl p-6 mb-6">
-                            <h3 className="font-black text-xl mb-4 text-white text-center">✨ 您的卡片 ✨</h3>
-                            
-                            <div className="text-center">
-                                {gameState === 'ready' && (
-                                    <div>
-                                        {currentPoints >= 5 ? (
-                                            <button
-                                                onClick={drawCard}
-                                                className="w-full bg-cyan-500 text-white px-6 py-4 rounded-full text-lg font-black hover:bg-cyan-600"
-                                            >
-                                                🎴 抽卡片！(-5點) ✨
-                                            </button>
-                                        ) : (
-                                            <div className="bg-white/90 rounded-full px-4 py-3">
-                                                <p className="text-purple-700 font-bold">還需要 {5 - currentPoints} 點才能抽卡 ✨</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {gameState === 'drawing' && (
-                                    <div className="flex flex-col items-center justify-center space-y-4">
-                                        <div className="card-shuffling">
-                                        </div>
-                                        <div className="text-white font-bold text-xl animate-pulse">抽卡中...</div>
-                                    </div>
-                                )}
-
-                                {gameState === 'result' && drawResult && (
-                                    <div className={`flex flex-col items-center justify-center space-y-4 card-reveal ${drawResult.type}`}>
-                                        {drawResult.url && (
-                                            <img
-                                                src={drawResult.url}
-                                                alt={drawResult.type}
-                                                className={`card-image ${drawResult.type}`}
-                                            />
-                                        )}
-                                        <div className={`rarity-tag ${drawResult.type}`}>
-                                            {drawResult.type.toUpperCase()}
-                                        </div>
-                                        
-                                        <button
-                                            onClick={resetGame}
-                                            className="w-full bg-purple-500 text-white px-6 py-3 rounded-full font-bold hover:bg-purple-600"
-                                        >
-                                            繼續遊戲 💫
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            {games.map((game, index) => {
-                                const gradients = [
-                                    'from-pink-400 to-rose-400',
-                                    'from-cyan-400 to-blue-400',
-                                    'from-purple-400 to-violet-400',
-                                    'from-green-400 to-emerald-400'
-                                ];
-                                return (
-                                    <div key={game.id} className={`bg-gradient-to-r ${gradients[index % gradients.length]} border-4 border-white shadow-xl rounded-2xl`}>
-                                        <div className="p-4">
-                                            <div className="flex justify-between items-center">
-                                                <div className="flex-1">
-                                                    <h3 className="font-black text-lg text-white drop-shadow-lg">
-                                                        {game.emoji} {game.name}
-                                                    </h3>
-                                                    <p className="text-sm text-white/90 font-semibold">
-                                                        {game.difficulty} | {game.points}點 ⭐
-                                                    </p>
-                                                    {gameResults[game.id] && (
-                                                        <p className="text-sm text-yellow-200 font-bold">
-                                                            🎉 完成 {gameResults[game.id]} 次
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <button
-                                                    onClick={() => setCurrentPage(game.id)}
-                                                    className="mobile-button bg-white text-purple-700 px-4 py-2 rounded-full font-black hover:bg-yellow-300 transition-all shadow-lg text-sm"
-                                                >
-                                                    START! 💫
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            );
-            // 猜數字遊戲
-            const GuessNumberGame = () => {
-                const [targetNumber, setTargetNumber] = useState('');
-                const [guess, setGuess] = useState('');
-                const [history, setHistory] = useState([]);
-                const [attempts, setAttempts] = useState(0);
-                const [gameOver, setGameOver] = useState(false);
-                
-                useEffect(() => {
-                    resetNumberGame();
-                }, []);
-                
-                const generateNewTargetNumber = () => {
-                    const digits = [];
-                    while (digits.length < 3) {
-                        const digit = Math.floor(Math.random() * 10).toString();
-                        if (!digits.includes(digit)) {
-                            digits.push(digit);
-                        }
-                    }
-                    return digits.join('');
-                };
-
-                const checkGuess = () => {
-                    if (guess.length !== 3 || new Set(guess.split('')).size !== 3) {
-                        alert('請輸入3位不重複數字！');
-                        return;
-                    }
-
-                    let a = 0, b = 0;
-                    for (let i = 0; i < 3; i++) {
-                        if (guess[i] === targetNumber[i]) {
-                            a++;
-                        } else if (targetNumber.includes(guess[i])) {
-                            b++;
-                        }
-                    }
-
-                    const result = `${guess} - ${a}A${b}B`;
-                    setHistory([result, ...history]);
-                    setAttempts(attempts + 1);
-
-                    if (a === 3) {
-                        setGameOver(true);
-                        completeGame('guess-number', 3);
-                        setCurrentPage('success-number');
-                    } else if (attempts + 1 >= 10) {
-                        setGameOver(true);
-                    }
-
-                    setGuess('');
-                };
-
-                const resetNumberGame = () => {
-                    setGameOver(false);
-                    setHistory([]);
-                    setGuess('');
-                    setAttempts(0);
-                    setTargetNumber(generateNewTargetNumber());
-                };
-
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 p-4 no-zoom">
-                        <div className="max-w-sm mx-auto">
-                            <div className="mb-4 bg-white/95 backdrop-blur-sm border-4 border-white shadow-xl rounded-2xl overflow-hidden">
-                                <div className="bg-gradient-to-r from-blue-400 to-purple-500 text-white p-4">
-                                    <h2 className="text-center font-black text-xl">🔢 數字遊戲</h2>
-                                    <p className="text-center text-sm text-white/90 font-semibold mt-1">
-                                        猜出3位不重複數字！A=位置和數字都對，B=數字對但位置錯 ✨
-                                    </p>
-                                    <p className="text-center text-xs text-white/80 mt-1">
-                                        剩餘機會: {10 - attempts} 次
-                                    </p>
-                                </div>
-                                <div className="p-6">
-                                    {!gameOver || (gameOver && attempts < 10) ? (
-                                        <div className="space-y-4">
-                                            <div className="space-y-3">
-                                                <input
-                                                    type="tel"
-                                                    value={guess}
-                                                    onChange={(e) => setGuess(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                                                    placeholder="輸入3位數字"
-                                                    className="w-full p-4 border-4 border-purple-300 rounded-full text-center text-xl font-bold focus:border-pink-400 focus:outline-none bg-white text-gray-800"
-                                                    maxLength={3}
-                                                    disabled={gameOver && attempts >= 10}
-                                                />
-                                                <button
-                                                    onClick={checkGuess}
-                                                    className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-2 border-white"
-                                                    disabled={gameOver && attempts >= 10}
-                                                >
-                                                    猜測! 💫
-                                                </button>
-                                            </div>
-                                            
-                                            <div className="max-h-48 overflow-y-auto space-y-2">
-                                                {history.map((result, index) => (
-                                                    <div key={index} className="p-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full text-center font-bold text-purple-700 border-2 border-purple-200">
-                                                        {result}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="text-center space-y-4">
-                                            <div className="text-4xl animate-pulse">😅 遊戲結束</div>
-                                            <div className="text-lg font-bold text-purple-700 bg-purple-100 rounded-full px-4 py-2">
-                                                答案是: {targetNumber}
-                                            </div>
-                                            <div className="text-xl font-black text-red-600 bg-red-100 rounded-full px-6 py-3">❌ 遊戲失敗！未獲得點數</div>
-                                            <button
-                                                onClick={resetNumberGame}
-                                                className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white"
-                                            >
-                                                再挑戰一次! 💪
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => setCurrentPage('home')}
-                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white"
-                            >
-                                回到首頁 🏠
-                            </button>
-                        </div>
-                    </div>
-                );
-            };
-
-            // 翻牌連連看遊戲
-            const MemoryCardGame = () => {
-                const [cards, setCards] = useState([]);
-                const [flippedCards, setFlippedCards] = useState([]);
-                const [matchedCards, setMatchedCards] = useState([]);
-                const [gameOver, setGameOver] = useState(false);
-                const [timeLeft, setTimeLeft] = useState(60);
-                const [timerActive, setTimerActive] = useState(false);
-
-                const emojis = ['💖', '🌈', '✨', '🌟', '💫', '🎉', '🎈', '🦄'];
-                
-                useEffect(() => {
-                    initializeGame();
-                }, []);
-
-                useEffect(() => {
-                    let interval = null;
-                    if (timerActive && timeLeft > 0 && !gameOver) {
-                        interval = setInterval(() => {
-                            setTimeLeft(timeLeft => {
-                                if (timeLeft <= 1) {
-                                    setGameOver(true);
-                                    setTimerActive(false);
-                                    return 0;
-                                }
-                                return timeLeft - 1;
-                            });
-                        }, 1000);
-                    } else if (timeLeft === 0 && !gameOver) {
-                        setGameOver(true);
-                        setTimerActive(false);
-                    }
-                    return () => clearInterval(interval);
-                }, [timerActive, timeLeft, gameOver]);
-                
-                const initializeGame = () => {
-                    const gameCards = [...emojis, ...emojis].map((emoji, index) => ({
-                        id: index,
-                        emoji
-                    }));
-                    
-                    for (let i = gameCards.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [gameCards[i], gameCards[j]] = [gameCards[j], gameCards[i]];
-                    }
-                    
-                    setCards(gameCards);
-                    setFlippedCards([]);
-                    setMatchedCards([]);
-                    setGameOver(false);
-                    setTimeLeft(60);
-                    setTimerActive(true);
-                };
-
-                const flipCard = (cardId) => {
-                    if (gameOver || flippedCards.length === 2 || flippedCards.includes(cardId) || matchedCards.includes(cardId)) {
-                        return;
-                    }
-
-                    const newFlipped = [...flippedCards, cardId];
-                    setFlippedCards(newFlipped);
-
-                    if (newFlipped.length === 2) {
-                        const [first, second] = newFlipped;
-                        const firstCard = cards.find(c => c.id === first);
-                        const secondCard = cards.find(c => c.id === second);
-                        if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
-                            const newMatched = [...matchedCards, first, second];
-                            setMatchedCards(newMatched);
-                            
-                            if (newMatched.length === cards.length) {
-                                completeGame('memory-card', 3);
-                                setTimerActive(false);
-                                setCurrentPage('success-memory');
-                                return;
-                            }
-                        }
-
-                        setTimeout(() => setFlippedCards([]), 1000);
-                    }
-                };
-                const formatTime = (seconds) => {
-                    const mins = Math.floor(seconds / 60);
-                    const secs = seconds % 60;
-                    return `${mins}:${secs.toString().padStart(2, '0')}`;
-                };
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-cyan-400 p-4 no-zoom">
-                        <div className="max-w-sm mx-auto">
-                            <div className="mb-4 bg-white/95 backdrop-blur-sm border-4 border-white shadow-xl rounded-2xl overflow-hidden">
-                                <div className="bg-gradient-to-r from-pink-400 to-purple-500 text-white p-4">
-                                    <h2 className="text-center font-black text-xl">🎴 記憶遊戲</h2>
-                                    <p className="text-center text-sm text-white/90 font-semibold mt-1">
-                                        翻開相同的卡片進行配對！✨
-                                    </p>
-                                    <div className="text-center mt-2">
-                                        <span className={`text-lg font-black ${timeLeft <= 10 ? 'text-red-200 animate-pulse' : 'text-white'}`}>
-                                            ⏰ {formatTime(timeLeft)}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    {!gameOver && matchedCards.length < cards.length ? (
-                                        <div className="grid grid-cols-4 gap-2">
-                                            {cards.map((card) => (
-                                                <button
-                                                    key={card.id}
-                                                    onClick={() => flipCard(card.id)}
-                                                    className={`aspect-square text-2xl rounded-xl transition-all duration-300 border-2 border-white shadow-lg ${
-                                                        flippedCards.includes(card.id) || matchedCards.includes(card.id)
-                                                        ? 'bg-gradient-to-r from-yellow-200 to-pink-200 shadow-xl'
-                                                            : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
-                                                    } ${matchedCards.includes(card.id) ? 'opacity-60' : ''}`}
-                                                >
-                                                    {flippedCards.includes(card.id) || matchedCards.includes(card.id) ? card.emoji : '💫'}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center space-y-4">
-                                            <div className="text-4xl animate-pulse">
-                                                {matchedCards.length === cards.length ? '🎉 恭喜過關！' : '⏰ 時間到了！'}
-                                            </div>
-                                            <div className="text-lg font-bold text-purple-700 bg-purple-100 rounded-full px-4 py-2">
-                                                已配對: {matchedCards.length / 2} / 8 組
-                                            </div>
-                                            <div className="text-xl font-black text-red-600 bg-red-100 rounded-full px-6 py-3">
-                                                {matchedCards.length === cards.length ? '獲得獎勵！' : '❌ 遊戲失敗！未獲得點數'}
-                                            </div>
-                                            <button
-                                                onClick={initializeGame}
-                                                className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white"
-                                            >
-                                                再挑戰一次! 💪
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => setCurrentPage('home')}
-                                className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white py-4 rounded-full font-black shadow-lg border-4 border-white"
-                            >
-                                回到首頁 🏠
-                            </button>
-                        </div>
-                    </div>
-                );
-            };
-
-            // 成功頁面組件
-            const SuccessPage = ({ title, emoji, points, gameId }) => (
-                <div className="min-h-screen bg-gradient-to-br from-green-300 via-emerald-400 to-teal-500 p-4 flex items-center justify-center no-zoom">
-                    <div className="max-w-sm mx-auto text-center">
-                        <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-4 border-white">
-                            <div className="text-6xl mb-4 animate-bounce">{emoji}</div>
-                            <h2 className="text-3xl font-black text-green-700 mb-4">{title}</h2>
-                            <div className="space-y-3 mb-6">
-                                <div className="text-xl font-black text-green-600 bg-yellow-200 rounded-full px-6 py-3 animate-pulse">
-                                    ✅ 獲得 {points} 點數！⭐
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                <button
-                                    onClick={() => setCurrentPage(gameId)}
-                                    className="mobile-button w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
-                                >
-                                    🎮 再玩一次
-                                </button>
-                                <button
-                                    onClick={() => setCurrentPage('home')}
-                                    className="mobile-button w-full bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-4 rounded-full font-black shadow-lg border-4 border-white text-lg"
-                                >
-                                    🏠 回到主畫面
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            // 根據當前頁面渲染
-            const renderPage = () => {
-                switch (currentPage) {
-                    case 'guess-number':
-                        return <GuessNumberGame />;
-                    case 'memory-card':
-                        return <MemoryCardGame />;
-                    case 'whack-a-mole':
-                        return <WhackAMoleGame />;
-                    case 'candy-crush':
-                        return <CandyCrushGame />;
-                    case 'success-number':
-                        return <SuccessPage title="恭喜過關！" emoji="🎉" points={3} gameId="guess-number" />;
-                    case 'success-memory':
-                        return <SuccessPage title="記憶達人！" emoji="🎉" points={3} gameId="memory-card" />;
-                    case 'success-whack-a-mole':
-                        return <SuccessPage title="地鼠剋星！" emoji="🔨" points={4} gameId="whack-a-mole" />;
-                    case 'success-candy-crush':
-                        return <SuccessPage title="甜點大師！" emoji="🍬" points={5} gameId="candy-crush" />;
+            const getCardRarityTagStyle = (rarity) => {
+                switch (rarity) {
+                    case 'R':
+                        return 'bg-gray-500 text-white border border-gray-600'; // Softer, distinguished R
+                    case 'SR':
+                        return 'bg-blue-500 text-white border border-blue-600'; // Clearer SR
+                    case 'SSR':
+                        return 'bg-purple-600 text-white border border-purple-700'; // Keep SSR impactful
+                    case 'SSS':
+                        return 'bg-yellow-500 text-white border border-yellow-600'; // Keep SSS impactful
                     default:
-                        return <HomePage />;
+                        return 'bg-gray-300 text-gray-800';
                 }
             };
 
-            return renderPage();
+            return (
+                <div className={`w-full p-4 flex flex-col items-center justify-center border-4 ${getCardBorderColor(rarity)} rounded-lg shadow-lg relative ${getCardBgColor(rarity)} transform transition duration-300 hover:scale-105`}>
+                    {isNew && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10 animate-pulse">NEW!</div>
+                    )}
+                    <div className={`absolute top-2 left-2 text-sm font-bold px-3 py-1 rounded-full ${getCardRarityTagStyle(rarity)}`}>
+                        {rarity}
+                    </div>
+                    <img src={image} alt={`${rarity} Card`} className="w-24 h-24 object-cover rounded-full mb-4 border-2 border-white shadow-md" />
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{reward}</h3>
+                    <div className="text-md text-gray-600">
+                        <span className="font-semibold">點數:</span> {points}
+                    </div>
+                </div>
+            );
+        };
+
+        const HomePage = ({ setCurrentPage, setTotalPoints, totalPoints }) => {
+            const [earnedCards, setEarnedCards] = useState(() => {
+                try {
+                    const storedCards = localStorage.getItem('earnedCards');
+                    return storedCards ? JSON.parse(storedCards) : [];
+                } catch (error) {
+                    console.error("Failed to parse earned cards from localStorage:", error);
+                    return [];
+                }
+            });
+
+            const cardsData = [
+                { id: 'card1', rarity: 'R', image: 'https://via.placeholder.com/100/A8A8A8/FFFFFF?text=R', points: 1, reward: '10 元折價券' },
+                { id: 'card2', rarity: 'SR', image: 'https://via.placeholder.com/100/64B5F6/FFFFFF?text=SR', points: 2, reward: '20 元折價券' },
+                { id: 'card3', rarity: 'SSR', image: 'https://via.placeholder.com/100/9C27B0/FFFFFF?text=SSR', points: 3, reward: '30 元折價券' },
+                { id: 'card4', rarity: 'SSS', image: 'https://via.placeholder.com/100/FFC107/FFFFFF?text=SSS', points: 5, reward: '50 元折價券' },
+            ];
+
+            const getRandomCard = () => {
+                const rand = Math.random();
+                if (rand < 0.05) return cardsData.find(card => card.rarity === 'SSS'); // 5% SSS
+                if (rand < 0.20) return cardsData.find(card => card.rarity === 'SSR'); // 15% SSR (20-5)
+                if (rand < 0.50) return cardsData.find(card => card.rarity === 'SR');  // 30% SR (50-20)
+                return cardsData.find(card => card.rarity === 'R'); // 50% R
+            };
+
+            const addRandomCard = () => {
+                const newCard = { ...getRandomCard(), uniqueId: Date.now() }; // Add unique ID
+                setEarnedCards(prevCards => {
+                    const updatedCards = [...prevCards, newCard];
+                    localStorage.setItem('earnedCards', JSON.stringify(updatedCards));
+                    return updatedCards;
+                });
+                setTotalPoints(prevPoints => prevPoints + newCard.points);
+            };
+
+            // Calculate total points from earned cards on load
+            useEffect(() => {
+                const pointsFromCards = earnedCards.reduce((sum, card) => sum + card.points, 0);
+                setTotalPoints(pointsFromCards);
+            }, []); // Run once on component mount
+
+            return (
+                <div className="p-6">
+                    <h2 className="text-3xl font-bold text-center text-gray-800 mb-6 animate-fade-in">歡迎來到遊戲世界！</h2>
+                    <p className="text-center text-gray-600 mb-8 animate-fade-in delay-100">透過遊戲贏取點數，兌換稀有獎勵卡片！</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <button
+                            onClick={() => setCurrentPage('guess-number')}
+                            className="mobile-button bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 text-lg"
+                        >
+                            <span role="img" aria-label="number">🔢</span> 猜數字遊戲
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage('memory-card')}
+                            className="mobile-button bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 text-lg"
+                        >
+                            <span role="img" aria-label="memory">🧠</span> 記憶卡片遊戲
+                        </button>
+                    </div>
+
+                    <div className="mb-8">
+                        <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">我的獎勵卡片 ({earnedCards.length})</h3>
+                        {earnedCards.length === 0 ? (
+                            <p className="text-center text-gray-500">你還沒有任何獎勵卡片，快去玩遊戲吧！</p>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {earnedCards.map((card, index) => (
+                                    <Card
+                                        key={card.uniqueId || index} // Use uniqueId for better key management
+                                        rarity={card.rarity}
+                                        image={card.image}
+                                        points={card.points}
+                                        reward={card.reward}
+                                        isNew={false} // Only display NEW for recently acquired cards, not on load
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const GuessNumberGame = ({ setCurrentPage, setTotalPoints }) => {
+            const [targetNumber] = useState(Math.floor(Math.random() * 100) + 1);
+            const [guess, setGuess] = useState('');
+            const [message, setMessage] = useState('');
+            const [attempts, setAttempts] = useState(0);
+            const [gameOver, setGameOver] = useState(false);
+
+            const handleGuess = () => {
+                const numGuess = parseInt(guess);
+                if (isNaN(numGuess) || numGuess < 1 || numGuess > 100) {
+                    setMessage('請輸入 1 到 100 之間的數字。');
+                    return;
+                }
+                setAttempts(attempts + 1);
+
+                if (numGuess === targetNumber) {
+                    setMessage(`恭喜你！你猜對了，數字是 ${targetNumber}！`);
+                    setGameOver(true);
+                    setTotalPoints(prevPoints => prevPoints + 3); // 猜數字遊戲獎勵 3 點
+                    setCurrentPage('success-number');
+                } else if (numGuess < targetNumber) {
+                    setMessage('太低了！再試一次。');
+                } else {
+                    setMessage('太高了！再試一次。');
+                }
+                setGuess('');
+            };
+
+            const resetGame = () => {
+                // This reset function is kept if the game itself needs a reset button,
+                // but the debug "重製" button was removed.
+                setTargetNumber(Math.floor(Math.random() * 100) + 1);
+                setGuess('');
+                setMessage('');
+                setAttempts(0);
+                setGameOver(false);
+            };
+
+            return (
+                <div className="p-6 text-center">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-4">猜數字遊戲</h2>
+                    <p className="text-gray-600 mb-6">我心裡想了一個 1 到 100 之間的數字，你來猜猜看！</p>
+                    <input
+                        type="number"
+                        value={guess}
+                        onChange={(e) => setGuess(e.target.value)}
+                        className="w-full max-w-xs p-3 border-2 border-gray-300 rounded-lg text-xl text-center mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="輸入你的數字"
+                        disabled={gameOver}
+                    />
+                    <button
+                        onClick={handleGuess}
+                        disabled={gameOver}
+                        className="mobile-button bg-purple-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-purple-700 transition duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        猜！
+                    </button>
+                    {message && <p className="mt-4 text-lg font-semibold text-gray-700">{message}</p>}
+                    <p className="mt-2 text-md text-gray-500">嘗試次數: {attempts}</p>
+                    {gameOver && (
+                        <button
+                            onClick={() => setCurrentPage('home')}
+                            className="mobile-button bg-blue-500 text-white font-bold py-2 px-6 rounded-lg mt-6 shadow-md hover:bg-blue-600 transition duration-300"
+                        >
+                            回到主頁
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+        const MemoryCardGame = ({ setCurrentPage, setTotalPoints }) => {
+            const initialEmojis = ['🍎', '🍌', '🍒', '🍓', '🍇', '🍍', '🍉', '🍑'];
+            const [cards, setCards] = useState([]);
+            const [flippedCards, setFlippedCards] = useState([]);
+            const [matchedCards, setMatchedCards] = useState([]);
+            const [moves, setMoves] = useState(0);
+            const [gameWon, setGameWon] = useState(false);
+
+            useEffect(() => {
+                initializeGame();
+            }, []);
+
+            useEffect(() => {
+                if (matchedCards.length === initialEmojis.length * 2 && initialEmojis.length > 0) {
+                    setGameWon(true);
+                    setTotalPoints(prevPoints => prevPoints + 3); // 記憶卡片遊戲獎勵 3 點
+                    setCurrentPage('success-memory');
+                }
+            }, [matchedCards, initialEmojis.length, setTotalPoints, setCurrentPage]);
+
+            const initializeGame = () => {
+                const shuffledEmojis = [...initialEmojis, ...initialEmojis]
+                    .sort(() => Math.random() - 0.5)
+                    .map((emoji, index) => ({
+                        id: index,
+                        emoji,
+                        isFlipped: false,
+                        isMatched: false,
+                    }));
+                setCards(shuffledEmojis);
+                setFlippedCards([]);
+                setMatchedCards([]);
+                setMoves(0);
+                setGameWon(false);
+            };
+
+            const handleCardClick = (clickedCard) => {
+                if (gameWon || flippedCards.length === 2 || clickedCard.isFlipped || clickedCard.isMatched) {
+                    return;
+                }
+
+                const newCards = cards.map(card =>
+                    card.id === clickedCard.id ? { ...card, isFlipped: true } : card
+                );
+                setCards(newCards);
+                setFlippedCards(prev => [...prev, clickedCard]);
+                setMoves(prev => prev + 1);
+            };
+
+            useEffect(() => {
+                if (flippedCards.length === 2) {
+                    const [card1, card2] = flippedCards;
+
+                    if (card1.emoji === card2.emoji) {
+                        setMatchedCards(prev => [...prev, card1.id, card2.id]);
+                        setCards(prevCards => prevCards.map(card =>
+                            card.id === card1.id || card.id === card2.id ? { ...card, isMatched: true } : card
+                        ));
+                        setFlippedCards([]);
+                    } else {
+                        setTimeout(() => {
+                            setCards(prevCards => prevCards.map(card =>
+                                card.id === card1.id || card.id === card2.id ? { ...card, isFlipped: false } : card
+                            ));
+                            setFlippedCards([]);
+                        }, 1000);
+                    }
+                }
+            }, [flippedCards, cards]);
+
+            return (
+                <div className="p-6 text-center">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-4">記憶卡片遊戲</h2>
+                    <p className="text-gray-600 mb-6">翻開兩張相同的卡片！</p>
+                    <p className="text-lg font-semibold text-gray-700 mb-4">步數: {moves}</p>
+                    <div className="grid grid-cols-4 gap-4 justify-items-center">
+                        {cards.map(card => (
+                            <div
+                                key={card.id}
+                                className={`memory-card ${card.isFlipped || card.isMatched ? 'flipped' : ''}`}
+                                onClick={() => handleCardClick(card)}
+                            >
+                                <div className="memory-card-inner">
+                                    <div className="memory-card-front"></div>
+                                    <div className="memory-card-back">
+                                        {card.emoji}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {gameWon && (
+                        <button
+                            onClick={() => setCurrentPage('home')}
+                            className="mobile-button bg-blue-500 text-white font-bold py-2 px-6 rounded-lg mt-6 shadow-md hover:bg-blue-600 transition duration-300"
+                        >
+                            回到主頁
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+
+        const SuccessPage = ({ title, emoji, points, gameId, setCurrentPage, setTotalPoints, setEarnedCards }) => {
+            const fireConfetti = useConfetti();
+
+            const cardsData = [
+                { id: 'card1', rarity: 'R', image: 'https://via.placeholder.com/100/A8A8A8/FFFFFF?text=R', points: 1, reward: '10 元折價券' },
+                { id: 'card2', rarity: 'SR', image: 'https://via.placeholder.com/100/64B5F6/FFFFFF?text=SR', points: 2, reward: '20 元折價券' },
+                { id: 'card3', rarity: 'SSR', image: 'https://via.placeholder.com/100/9C27B0/FFFFFF?text=SSR', points: 3, reward: '30 元折價券' },
+                { id: 'card4', rarity: 'SSS', image: 'https://via.placeholder.com/100/FFC107/FFFFFF?text=SSS', points: 5, reward: '50 元折價券' },
+            ];
+
+            const getRandomCard = useCallback(() => {
+                const rand = Math.random();
+                if (rand < 0.05) return cardsData.find(card => card.rarity === 'SSS'); // 5% SSS
+                if (rand < 0.20) return cardsData.find(card => card.rarity === 'SSR'); // 15% SSR (20-5)
+                if (rand < 0.50) return cardsData.find(card => card.rarity === 'SR');  // 30% SR (50-20)
+                return cardsData.find(card => card.rarity === 'R'); // 50% R
+            }, [cardsData]);
+
+            const [newlyEarnedCard, setNewlyEarnedCard] = useState(null);
+
+            useEffect(() => {
+                fireConfetti();
+                const card = { ...getRandomCard(), uniqueId: Date.now(), isNew: true };
+                setNewlyEarnedCard(card);
+                setTotalPoints(prevPoints => prevPoints + points); // Add points from game completion
+                setEarnedCards(prevCards => {
+                    const updatedCards = [...prevCards, card];
+                    localStorage.setItem('earnedCards', JSON.stringify(updatedCards));
+                    return updatedCards;
+                });
+            }, [fireConfetti, points, getRandomCard, setTotalPoints, setEarnedCards]);
+
+
+            return (
+                <div className="p-6 text-center flex flex-col items-center justify-center min-h-[400px]">
+                    <div className="text-7xl mb-4 animate-bounce">{emoji}</div>
+                    <h2 className="text-4xl font-bold text-gray-800 mb-3 animate-fade-in">{title}</h2>
+                    <p className="text-xl text-gray-600 mb-6 animate-fade-in delay-100">
+                        你獲得了 <span className="font-bold text-purple-600">{points}</span> 點！
+                    </p>
+                    {newlyEarnedCard && (
+                        <div className="mt-4 mb-6 animate-zoom-in">
+                            <h3 className="text-2xl font-bold text-gray-800 mb-4">恭喜獲得新卡片！</h3>
+                            <Card
+                                rarity={newlyEarnedCard.rarity}
+                                image={newlyEarnedCard.image}
+                                points={newlyEarnedCard.points}
+                                reward={newlyEarnedCard.reward}
+                                isNew={newlyEarnedCard.isNew}
+                            />
+                        </div>
+                    )}
+                    <button
+                        onClick={() => setCurrentPage('home')}
+                        className="mobile-button bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-600 transition duration-300 text-lg mt-6"
+                    >
+                        回到主頁
+                    </button>
+                </div>
+            );
+        };
+
+        const BirthdayGameApp = () => {
+            const [currentPage, setCurrentPage] = useState('home');
+            const [totalPoints, setTotalPoints] = useState(() => {
+                try {
+                    const storedPoints = localStorage.getItem('totalPoints');
+                    return storedPoints ? parseInt(storedPoints) : 0;
+                } catch (error) {
+                    console.error("Failed to parse total points from localStorage:", error);
+                    return 0;
+                }
+            });
+
+            // State for earned cards, managed here to be passed down
+            const [earnedCards, setEarnedCards] = useState(() => {
+                try {
+                    const storedCards = localStorage.getItem('earnedCards');
+                    return storedCards ? JSON.parse(storedCards) : [];
+                } catch (error) {
+                    console.error("Failed to parse earned cards from localStorage:", error);
+                    return [];
+                }
+            });
+
+
+            useEffect(() => {
+                localStorage.setItem('totalPoints', totalPoints.toString());
+            }, [totalPoints]);
+
+
+            const renderPage = () => {
+                switch (currentPage) {
+                    case 'guess-number':
+                        return <GuessNumberGame setCurrentPage={setCurrentPage} setTotalPoints={setTotalPoints} />;
+                    case 'memory-card':
+                        return <MemoryCardGame setCurrentPage={setCurrentPage} setTotalPoints={setTotalPoints} />;
+                    case 'success-number':
+                        return <SuccessPage title="恭喜過關！" emoji="🎉" points={3} gameId="guess-number" setCurrentPage={setCurrentPage} setTotalPoints={setTotalPoints} setEarnedCards={setEarnedCards} />;
+                    case 'success-memory':
+                        return <SuccessPage title="記憶達人！" emoji="🎉" points={3} gameId="memory-card" setCurrentPage={setCurrentPage} setTotalPoints={setTotalPoints} setEarnedCards={setEarnedCards} />;
+                    default:
+                        return <HomePage setCurrentPage={setCurrentPage} setTotalPoints={setTotalPoints} totalPoints={totalPoints} />;
+                }
+            };
+
+            return (
+                <div className="relative min-h-screen bg-gradient-to-br from-purple-400 to-indigo-600 flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden md:max-w-xl lg:max-w-2xl transform transition-all duration-300">
+                        {/* Header for total points */}
+                        <div className="bg-purple-700 text-white p-4 flex justify-between items-center shadow-lg">
+                            <h1 className="text-2xl font-bold">
+                                🌟 生日大挑戰 🌟
+                            </h1>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-xl font-semibold">點數:</span>
+                                <span className="text-2xl font-bold text-yellow-300">{totalPoints}</span>
+                            </div>
+                        </div>
+
+                        {/* Main content area */}
+                        <div className="p-6">
+                            {renderPage()}
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
         ReactDOM.render(<BirthdayGameApp />, document.getElementById('root'));
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </body>
 </html>
