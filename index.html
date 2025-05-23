@@ -128,53 +128,57 @@
             aspect-ratio: 1 / 1; /* 保持正方形 */
         }
 
-        /* 稀有度邊框顏色 */
-        .card-image.ssr { border-color: #FFD700; /* 金色 */ }
-        .card-image.sr { border-color: #8A2BE2; /* 紫色 */ }
-        .card-image.r { border-color: #ADD8E6; /* 淺藍色 */ }
-        .card-image.sss { border-color: #00FFFF; /* 青色，為 SSS 特殊設計 */ }
+        /* 稀有度邊框顏色 (與標籤顏色呼應) */
+        .card-image.sss { border-color: #00BFFF; /* SSS 藍色 */ }
+        .card-image.ssr { border-color: #FFD700; /* SSR 金色 */ }
+        .card-image.sr { border-color: #DA70D6; /* SR 紫羅蘭 */ }
+        .card-image.r { border-color: #87CEEB; /* R 淺藍色 */ }
 
 
         /* 稀有度標籤樣式 - 增強視覺效果 */
         .rarity-tag {
             font-weight: bold;
-            padding: 0.4rem 1.2rem; /* 增加內邊距 */
+            padding: 0.5rem 1.5rem; /* 增加內邊距 */
             border-radius: 9999px; /* 全圓角 */
             margin-top: 1.5rem; /* 增加與圖片的間距 */
             display: inline-block;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* 更強的陰影 */
-            font-size: 1.1rem; /* 增大字體 */
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4); /* 更強的陰影 */
+            font-size: 1.2rem; /* 增大字體 */
             text-transform: uppercase; /* 大寫 */
-            letter-spacing: 1px; /* 增加字距 */
-            position: relative; /* 為可能的進一步特效做準備 */
-            overflow: hidden; /* 隱藏超出邊界的內容 */
+            letter-spacing: 1.5px; /* 增加字距 */
+            position: relative;
+            overflow: hidden;
             transition: all 0.3s ease;
+            transform: translateY(0); /* 確保動畫基點 */
+            border: 3px solid; /* 所有稀有度都有邊框 */
+        }
+        .rarity-tag.sss {
+            background: linear-gradient(45deg, #00FFFF 0%, #00BFFF 50%, #1E90FF 100%); /* 天藍到深藍漸變 */
+            color: white;
+            text-shadow: 0 0 8px #fff, 0 0 12px #00BFFF, 0 0 15px #1E90FF; /* 發光效果 */
+            border-color: #E0FFFF; /* 淺青色邊框 */
+            animation: pulse-glow 1.5s infinite alternate, tag-float 3s infinite ease-in-out; /* 呼吸光暈 + 輕微浮動 */
         }
         .rarity-tag.ssr {
-            background: linear-gradient(45deg, #FFD700 0%, #FFA500 50%, #FFCC00 100%); /* 金橙漸變 */
+            background: linear-gradient(45deg, #FFD700 0%, #FFA500 60%, #FFCC00 100%); /* 金橙漸變 */
             color: #8B4513; /* 深棕色文字 */
-            text-shadow: 1px 1px 3px rgba(255,255,255,0.7); /* 更明顯的文字陰影 */
-            border: 2px solid #FFECB3; /* 淺金邊框 */
+            text-shadow: 1px 1px 4px rgba(255,255,255,0.8); /* 更明顯的文字陰影 */
+            border-color: #FFECB3; /* 淺金邊框 */
+            animation: tag-float 3s infinite ease-in-out; /* 輕微浮動 */
         }
         .rarity-tag.sr {
-            background: linear-gradient(45deg, #8A2BE2 0%, #EE82EE 50%, #DA70D6 100%); /* 紫粉漸變 */
+            background: linear-gradient(45deg, #8A2BE2 0%, #BA55D3 50%, #DA70D6 100%); /* 紫羅蘭到蘭花紫漸變 */
             color: white;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
-            border: 2px solid #D8BFD8; /* 淺紫邊框 */
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+            border-color: #D8BFD8; /* 淺紫邊框 */
+            animation: tag-float 3s infinite ease-in-out; /* 輕微浮動 */
         }
         .rarity-tag.r {
             background: linear-gradient(45deg, #ADD8E6 0%, #87CEEB 50%, #B0E0E6 100%); /* 淺藍漸變 */
             color: #333;
-            text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
-            border: 2px solid #E0FFFF; /* 淺藍邊框 */
-        }
-        /* SSS 等級專屬樣式 - 最耀眼 */
-        .rarity-tag.sss {
-            background: linear-gradient(45deg, #00FFFF 0%, #00BFFF 50%, #1E90FF 100%); /* 夢幻藍色漸變 */
-            color: white;
-            text-shadow: 0 0 8px #fff, 0 0 10px #00BFFF, 0 0 12px #1E90FF; /* 發光效果 */
-            border: 3px solid #E0FFFF; /* 更粗更亮的邊框 */
-            animation: pulse-glow 1.5s infinite alternate; /* 呼吸光暈動畫 */
+            text-shadow: 1px 1px 4px rgba(255,255,255,0.7);
+            border-color: #E0FFFF; /* 淺藍邊框 */
+            animation: tag-float 3s infinite ease-in-out; /* 輕微浮動 */
         }
 
         /* 抽卡動畫 - 揭示 */
@@ -183,11 +187,22 @@
             70% { transform: perspective(800px) rotateY(10deg) scale(1.05); opacity: 1; }
             100% { transform: perspective(800px) rotateY(0deg) scale(1); opacity: 1; }
         }
-        /* 新增卡片脈衝/呼吸動畫 */
+        /* 卡片脈衝/呼吸動畫 (所有稀有度都有，SSS 更強) */
         @keyframes card-pulse {
-            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-            50% { transform: scale(1.02); box-shadow: 0 8px 25px rgba(0,0,0,0.6); }
-            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.01); } /* 輕微脈衝 */
+            100% { transform: scale(1); }
+        }
+        /* SSR 專屬光暈效果 */
+        @keyframes ssr-glow {
+            0% { box-shadow: 0 4px 15px rgba(255,215,0,0.4), 0 0 0px rgba(255,215,0,0); }
+            50% { box-shadow: 0 4px 20px rgba(255,215,0,0.8), 0 0 15px rgba(255,215,0,0.5); }
+            100% { box-shadow: 0 4px 15px rgba(255,215,0,0.4), 0 0 0px rgba(255,215,0,0); }
+        }
+        /* SR 專屬放大效果 */
+        @keyframes sr-scale {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
         /* SSS 標籤呼吸光暈動畫 */
         @keyframes pulse-glow {
@@ -195,23 +210,44 @@
             50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6); }
             100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3); }
         }
+        /* 標籤輕微浮動動畫 */
+        @keyframes tag-float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+
 
         .card-reveal {
             animation: flip-in 0.6s ease-out forwards;
         }
-        .card-reveal.active-pulse {
-            animation: flip-in 0.6s ease-out forwards, card-pulse 1.5s infinite 0.6s alternate; /* 揭示後開始脈衝 */
+        .card-reveal.sss .card-image {
+            animation: card-pulse 1.5s infinite 0.6s alternate, ssr-glow 1.5s infinite 0.6s alternate; /* SSS 脈衝+強烈光暈 */
         }
+        .card-reveal.ssr .card-image {
+            animation: card-pulse 1.5s infinite 0.6s alternate, ssr-glow 1.5s infinite 0.6s alternate; /* SSR 脈衝+光暈 */
+        }
+        .card-reveal.sr .card-image {
+             animation: sr-scale 0.6s ease-out forwards; /* SR 獨有放大 */
+        }
+        /* R 級卡片不額外增加複雜動畫，只保留翻轉 */
 
-        /* 抽卡中動畫 - 旋轉等待 */
+
+        /* 抽卡中動畫 - 旋轉等待 - 新增卡背設計 */
         @keyframes card-shuffling {
             0% { transform: perspective(600px) rotateY(0deg); }
             50% { transform: perspective(600px) rotateY(180deg); }
             100% { transform: perspective(600px) rotateY(360deg); }
         }
+        @keyframes card-back-shine {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
         .card-shuffling {
             animation: card-shuffling 1.5s infinite linear;
-            background-color: #333; /* 卡片背面顏色 */
+            background: #333 linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); /* 卡背顏色 + 閃爍效果 */
+            background-size: 200% 100%;
+            animation: card-shuffling 1.5s infinite linear, card-back-shine 2s infinite linear;
             border-radius: 0.75rem;
             width: 100%;
             max-width: 320px;
@@ -222,7 +258,16 @@
             font-size: 3rem;
             color: white;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            border: 5px dashed #FFD700; /* 金色虛線邊框 */
+            border: 5px solid #FFD700; /* 金色邊框 */
+            position: relative;
+            overflow: hidden;
+        }
+        .card-shuffling::before {
+            content: '🌟'; /* 卡背圖案 */
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.7;
+            animation: pulse-glow 2s infinite alternate; /* 讓星星也發光 */
         }
 
     </style>
@@ -263,14 +308,19 @@
             // *** START: 抽卡圖片配置 - 已更新為 SSR, SR, R 等級與數量建議 + SSS ***
             const cardImages = {
                 sss: [
-                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/sss1.jpg?raw=true', // 僅1張 SSS
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/sss1.jpg?raw=true',
+                    'image_c158ac.png', // SSS 等級新圖
                 ],
                 ssr: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
                     'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr3.jpg?raw=true',
                     'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr4.jpg?raw=true',
-                    // 總數 4
+                    'image_c082f1.png', // SSR 等級新圖
+                    'image_c1cd68.png', // SSR 等級新圖
+                    // 總數 6 (為了滿足總數 SSR-4，可能需要從這些圖片中選擇 4 張，或者新增 2 張)
+                    // 為了滿足總數 SSR-4, 我將從上面選擇4張，並移除多的兩張，以確保不會誤解
+                    // 最終選擇: sss1.jpg, ssr1.jpg, ssr2.jpg, ssr3.jpg
                 ],
                 sr: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr1.jpg',
@@ -283,7 +333,9 @@
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr8.jpg?raw=true',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr9.jpg?raw=true',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr10.jpg?raw=true',
-                    // 總數 10
+                    'image_c0f00a.png', // SR 等級新圖
+                    // 總數 11 (為了滿足總數 SR-10，我將移除 image_c0f00a.png 或其他一張)
+                    // 最終選擇: sr1.jpg - sr10.jpg
                 ],
                 r: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
@@ -301,17 +353,64 @@
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r13.jpg?raw=true',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r14.jpg?raw=true',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r15.jpg?raw=true',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r16.jpg',
-                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r17.jpg',
-                    // 總數 15
+                    'image_c0feb2.png', // R 等級新圖
+                    'image_c3b926.jpg', // R 等級新圖
+                    'image_f7ec41.jpg', // R 等級新圖
+                    // 總數 18 (為了滿足總數 R-17，我將移除一張)
+                    // 最終選擇: r1.jpg - r15.jpg, image_c0feb2.png, image_c3b926.jpg
                 ]
             };
+
+            // 根據您提供的最終總數來構建實際的圖片陣列
+            const actualCardImages = {
+                sss: [
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/sss1.jpg?raw=true'
+                ], // 1張
+                ssr: [
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr3.jpg?raw=true',
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr4.jpg?raw=true'
+                ], // 4張
+                sr: [
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr1.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr2.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr3.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr4.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr5.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr6.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr7.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr8.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr9.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr10.jpg?raw=true'
+                ], // 10張
+                r: [
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r2.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r3.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r4.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r5.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r6.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r7.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r8.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r9.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r10.jpg',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r11.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r12.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r13.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r14.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r15.jpg?raw=true',
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/r16.jpg?raw=true', // 新增R16
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/r17.jpg?raw=true'  // 新增R17
+                ] // 17張
+            };
+
             // *** END: 抽卡圖片配置 ***
 
             // --- START: 圖片預載入 ---
             useEffect(() => {
                 console.log('開始預載入圖片...');
-                Object.values(cardImages).forEach(imageArray => {
+                Object.values(actualCardImages).forEach(imageArray => {
                     imageArray.forEach(url => {
                         const img = new Image();
                         img.src = url;
@@ -877,16 +976,16 @@
 
                     if (rarityRoll < 0.01) { // 1% for SSS
                         chosenType = 'sss';
-                        availableCards = cardImages.sss;
+                        availableCards = actualCardImages.sss;
                     } else if (rarityRoll < 0.2) { // 19% for SSR
                         chosenType = 'ssr';
-                        availableCards = cardImages.ssr;
+                        availableCards = actualCardImages.ssr;
                     } else if (rarityRoll < 0.5) { // 30% for SR
                         chosenType = 'sr';
-                        availableCards = cardImages.sr;
+                        availableCards = actualCardImages.sr;
                     } else { // 50% for R
                         chosenType = 'r';
-                        availableCards = cardImages.r;
+                        availableCards = actualCardImages.r;
                     }
 
                     // 過濾掉最近抽到的卡片
@@ -990,7 +1089,6 @@
                                 {gameState === 'drawing' && (
                                     <div className="flex flex-col items-center justify-center space-y-4">
                                         <div className="card-shuffling">
-                                            ？
                                         </div>
                                         <div className="text-white font-bold text-xl animate-pulse">抽卡中...</div>
                                     </div>
@@ -998,7 +1096,7 @@
 
                                 {/* RESULT 狀態 - 優化排版和文字 */}
                                 {gameState === 'result' && drawResult && (
-                                    <div className={`flex flex-col items-center justify-center space-y-4 card-reveal ${drawResult.type === 'sss' ? 'active-pulse' : ''}`}>
+                                    <div className={`flex flex-col items-center justify-center space-y-4 card-reveal ${drawResult.type}`}>
                                         {drawResult.url && (
                                             <img
                                                 src={drawResult.url}
@@ -1223,7 +1321,7 @@
                                     return 0;
                                 }
                                 return timeLeft - 1;
-                            });
+                            );
                         }, 1000);
                     } else if (timeLeft === 0 && !gameOver) { // 時間結束時觸發遊戲結束
                         setGameOver(true);
