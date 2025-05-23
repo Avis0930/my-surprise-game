@@ -65,7 +65,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem; /* 糖果表情符號大小 */
+            /* 修正糖果大小，避免溢出 */
+            font-size: 1.5rem; /* 稍微縮小糖果表情符號大小 */
             border-radius: 8px;
             cursor: pointer;
             background-color: rgba(255, 255, 255, 0.1); /* 淺色背景，讓糖果更突出 */
@@ -76,6 +77,8 @@
             box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
             /* 優化：告知瀏覽器這些屬性將會改變 */
             will-change: transform, opacity;
+            /* 確保內容不溢出 */
+            overflow: hidden; 
         }
         .candy-tile.selected {
             border: 3px solid #FFD700; /* 黃金邊框選中 */
@@ -103,6 +106,12 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            /* 確保內容不會因 transform 溢出，並且居中 */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* 抽卡圖片樣式 */
@@ -123,6 +132,8 @@
         .card-image.ssr { border-color: #FFD700; /* 金色 */ }
         .card-image.sr { border-color: #8A2BE2; /* 紫色 */ }
         .card-image.r { border-color: #ADD8E6; /* 淺藍色 */ }
+        .card-image.sss { border-color: #00FFFF; /* 青色，為 SSS 特殊設計 */ }
+
 
         /* 稀有度標籤樣式 - 增強視覺效果 */
         .rarity-tag {
@@ -157,6 +168,14 @@
             text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
             border: 2px solid #E0FFFF; /* 淺藍邊框 */
         }
+        /* SSS 等級專屬樣式 - 最耀眼 */
+        .rarity-tag.sss {
+            background: linear-gradient(45deg, #00FFFF 0%, #00BFFF 50%, #1E90FF 100%); /* 夢幻藍色漸變 */
+            color: white;
+            text-shadow: 0 0 8px #fff, 0 0 10px #00BFFF, 0 0 12px #1E90FF; /* 發光效果 */
+            border: 3px solid #E0FFFF; /* 更粗更亮的邊框 */
+            animation: pulse-glow 1.5s infinite alternate; /* 呼吸光暈動畫 */
+        }
 
         /* 抽卡動畫 - 揭示 */
         @keyframes flip-in {
@@ -164,8 +183,24 @@
             70% { transform: perspective(800px) rotateY(10deg) scale(1.05); opacity: 1; }
             100% { transform: perspective(800px) rotateY(0deg) scale(1); opacity: 1; }
         }
+        /* 新增卡片脈衝/呼吸動畫 */
+        @keyframes card-pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+            50% { transform: scale(1.02); box-shadow: 0 8px 25px rgba(0,0,0,0.6); }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        }
+        /* SSS 標籤呼吸光暈動畫 */
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6); }
+            100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3); }
+        }
+
         .card-reveal {
             animation: flip-in 0.6s ease-out forwards;
+        }
+        .card-reveal.active-pulse {
+            animation: flip-in 0.6s ease-out forwards, card-pulse 1.5s infinite 0.6s alternate; /* 揭示後開始脈衝 */
         }
 
         /* 抽卡中動畫 - 旋轉等待 */
@@ -205,14 +240,17 @@
             const [gameState, setGameState] = useState('ready');
             // 新增抽卡結果狀態
             const [drawResult, setDrawResult] = useState(null); // { type: 'legendary', url: '...' }
+            // 新增一個狀態來追蹤最近抽到的卡片，避免重複
+            const [recentDrawnCards, setRecentDrawnCards] = useState([]);
+            const RECENT_DRAWN_LIMIT = 3; // 記錄最近3張抽到的卡片，避免立即重複
+
             console.log('渲染狀態:', gameState, '點數:', currentPoints);
 
             const games = [
                 { id: 'guess-number', name: '1A2B猜數字', points: 3, difficulty: '簡單', emoji: '🔢' },
                 { id: 'memory-card', name: '翻牌連連看', points: 3, difficulty: '中等', emoji: '🎴' },
                 { id: 'whack-a-mole', name: '打地鼠', points: 4, difficulty: '中等', emoji: '🐭' }, // 新增打地鼠
-                { id: 'candy-crush', name: '糖果消消樂', points: 2, difficulty: '簡單', emoji: '🍭' },
-                // 已移除拖曳拼圖遊戲 { id: 'jigsaw-puzzle', name: '拖曳拼圖', points: 5, difficulty: '困難', emoji: '🧩' },
+                { id: 'candy-crush', name: '糖果消消樂', points: 5, difficulty: '簡單', emoji: '🍭' }, // 糖果消消樂點數修正為 5
             ];
             const completeGame = (gameId, points) => {
                 setCurrentPoints(prev => prev + points);
@@ -222,14 +260,17 @@
                 }));
             };
 
-            // *** START: 抽卡圖片配置 - 已更新為 SSR, SR, R 等級與數量建議 ***
+            // *** START: 抽卡圖片配置 - 已更新為 SSR, SR, R 等級與數量建議 + SSS ***
             const cardImages = {
+                sss: [
+                    'https://github.com/Avis0930/my-surprise-game/blob/main/images/sss1.jpg?raw=true', // 僅1張 SSS
+                ],
                 ssr: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr1.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/ssr2.jpg',
                     'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr3.jpg?raw=true',
                     'https://github.com/Avis0930/my-surprise-game/blob/main/images/ssr4.jpg?raw=true',
-                    // 如果您有更多 SSR 圖片，請在此添加
+                    // 總數 4
                 ],
                 sr: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr1.jpg',
@@ -238,7 +279,11 @@
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr4.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr5.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr6.jpg',
-                    // 如果您有更多 SR 圖片，請在此添加
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr7.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr8.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr9.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/sr10.jpg?raw=true',
+                    // 總數 10
                 ],
                 r: [
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r1.jpg',
@@ -251,7 +296,12 @@
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r8.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r9.jpg',
                     'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r10.jpg',
-                    // 如果您有更多 R 圖片，請在此添加
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r11.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r12.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r13.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r14.jpg?raw=true',
+                    'https://raw.githubusercontent.com/Avis0930/my-surprise-game/main/images/r15.jpg?raw=true',
+                    // 總數 15
                 ]
             };
             // *** END: 抽卡圖片配置 ***
@@ -665,7 +715,7 @@
                     if (gameOver) {
                         clearInterval(gameIntervalRef.current);
                         if (score >= targetScore) {
-                            completeGame('candy-crush', 5); 
+                            completeGame('candy-crush', 5); // 確保這裡獎勵點數為 5
                             setCurrentPage('success-candy-crush');
                         }
                     }
@@ -798,9 +848,6 @@
                 );
             };
 
-            // 已移除拖曳拼圖遊戲
-            // const JigsawPuzzleGame = () => { /* ... (此處原拼圖遊戲代碼已被移除) ... */ };
-
             // 抽卡機制
             const addPoints = () => {
                 setCurrentPoints(p => p + 10);
@@ -816,22 +863,51 @@
                 
                 // 抽卡延遲縮短到 1 秒
                 setTimeout(() => {
-                    // 根據抽卡結果設定 drawResult (隨機選一張圖片)
                     const rarityRoll = Math.random();
                     let chosenCardUrl = null;
                     let chosenType = '';
+                    let availableCards = [];
 
-                    // SSR: 20% (0.0 - 0.2), SR: 30% (0.2 - 0.5), R: 50% (0.5 - 1.0)
-                    if (rarityRoll < 0.2) { // 20% for SSR
+                    // SSS: 1% (0.0 - 0.01)
+                    // SSR: 19% (0.01 - 0.20)
+                    // SR: 30% (0.20 - 0.50)
+                    // R: 50% (0.50 - 1.00)
+
+                    if (rarityRoll < 0.01) { // 1% for SSS
+                        chosenType = 'sss';
+                        availableCards = cardImages.sss;
+                    } else if (rarityRoll < 0.2) { // 19% for SSR
                         chosenType = 'ssr';
-                        chosenCardUrl = cardImages.ssr[Math.floor(Math.random() * cardImages.ssr.length)];
-                    } else if (rarityRoll < 0.5) { // 30% for SR (0.2 + 0.3 = 0.5)
+                        availableCards = cardImages.ssr;
+                    } else if (rarityRoll < 0.5) { // 30% for SR
                         chosenType = 'sr';
-                        chosenCardUrl = cardImages.sr[Math.floor(Math.random() * cardImages.sr.length)];
+                        availableCards = cardImages.sr;
                     } else { // 50% for R
                         chosenType = 'r';
-                        chosenCardUrl = cardImages.r[Math.floor(Math.random() * cardImages.r.length)];
+                        availableCards = cardImages.r;
                     }
+
+                    // 過濾掉最近抽到的卡片
+                    const filteredCards = availableCards.filter(url => !recentDrawnCards.includes(url));
+
+                    if (filteredCards.length > 0) {
+                        chosenCardUrl = filteredCards[Math.floor(Math.random() * filteredCards.length)];
+                    } else {
+                        // 如果所有同稀有度的卡片都抽過了，則從所有卡片中隨機選一張（允許重複）
+                        chosenCardUrl = availableCards[Math.floor(Math.random() * availableCards.length)];
+                        // 清空最近抽到的卡片列表，以便重新開始記錄
+                        setRecentDrawnCards([]); 
+                        console.log('所有卡片已抽取過一輪，重置近期抽卡列表。');
+                    }
+
+                    // 更新 recentDrawnCards
+                    setRecentDrawnCards(prev => {
+                        const newRecent = [...prev, chosenCardUrl];
+                        if (newRecent.length > RECENT_DRAWN_LIMIT) {
+                            return newRecent.slice(1); // 移除最舊的卡片
+                        }
+                        return newRecent;
+                    });
                     
                     setDrawResult({ type: chosenType, url: chosenCardUrl });
                     setGameState('result');
@@ -920,7 +996,7 @@
 
                                 {/* RESULT 狀態 - 優化排版和文字 */}
                                 {gameState === 'result' && drawResult && (
-                                    <div className="flex flex-col items-center justify-center space-y-4 card-reveal">
+                                    <div className={`flex flex-col items-center justify-center space-y-4 card-reveal ${drawResult.type === 'sss' ? 'active-pulse' : ''}`}>
                                         {drawResult.url && (
                                             <img
                                                 src={drawResult.url}
@@ -1314,8 +1390,6 @@
                         return <WhackAMoleGame />;
                     case 'candy-crush': // 糖果消消樂
                         return <CandyCrushGame />;
-                    // 已移除拖曳拼圖遊戲 case 'jigsaw-puzzle':
-                    // 已移除拖曳拼圖遊戲    return <JigsawPuzzleGame />;
                     case 'success-number':
                         return <SuccessPage title="恭喜過關！" emoji="🎉" points={3} gameId="guess-number" />;
                     case 'success-memory':
@@ -1324,8 +1398,6 @@
                         return <SuccessPage title="地鼠剋星！" emoji="🔨" points={4} gameId="whack-a-mole" />;
                     case 'success-candy-crush': // 糖果消消樂成功頁面
                         return <SuccessPage title="甜點大師！" emoji="🍬" points={5} gameId="candy-crush" />;
-                    // 已移除拖曳拼圖遊戲 case 'success-puzzle':
-                    // 已移除拖曳拼圖遊戲    return <SuccessPage title="拼圖大師！" emoji="🧩" points={5} gameId="jigsaw-puzzle" />;
                     default:
                         return <HomePage />;
                 }
